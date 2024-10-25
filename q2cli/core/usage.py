@@ -220,7 +220,7 @@ class CLIUsage(usage.Usage):
         ]
         self.recorder.extend(lines)
 
-        return variable
+        return accessed_variable
 
     def import_from_format(self, name, semantic_type,
                            variable, view_type=None):
