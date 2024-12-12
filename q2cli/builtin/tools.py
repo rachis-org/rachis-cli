@@ -524,9 +524,7 @@ def _merge_metadata(paths):
 def view(visualization_path, index_extension):
     # Guard headless envs from having to import anything large
     import sys
-    from qiime2 import Visualization
-    from q2cli.util import _load_input
-    from q2cli.core.config import CONFIG
+
     if not os.getenv("DISPLAY") and sys.platform != "darwin":
         raise click.UsageError(
             'Visualization viewing is currently not supported in headless '
@@ -534,49 +532,95 @@ def view(visualization_path, index_extension):
             'https://view.qiime2.org, or move the Visualization to an '
             'environment with a display and view it with `qiime tools view`.')
 
-    if index_extension.startswith('.'):
-        index_extension = index_extension[1:]
+    import signal
+    import threading
+    from q2cli.core.config import CONFIG
+    from http.server import HTTPServer
 
-    _, visualization = _load_input(visualization_path, view=True)[0]
-    if not isinstance(visualization, Visualization):
-        raise click.BadParameter(
-            '%s is not a QIIME 2 Visualization. Only QIIME 2 Visualizations '
-            'can be viewed.' % visualization_path)
+    import http.server
 
-    index_paths = visualization.get_index_paths(relative=False)
+    class Handler(http.server.SimpleHTTPRequestHandler):
+        def do_GET(self):
+            # Determine if this is a request for the file we are supposed to be
+            # viewing
+            #
+            # TODO: This is dumb, currently when we click.launch with our path
+            # as the file search parameter it will GET /?file={path}. If we
+            # respond to that GET with this then we download the file and don't
+            # even actually load the page. That is obviously undesirable, so
+            # instead I take that file search param in js in q2view and send
+            # a GET with it as just part of the url. Clearly I need to figure
+            # out how to intercept/modify the behavior of the first get
+            if self.path.endswith(('.qza', '.qzv')) \
+                    and 'file' not in self.path:
+                # Get the actual filepath out of the request
 
-    if index_extension not in index_paths:
-        raise click.BadParameter(
-            'No index %s file is present in the archive. Available index '
-            'extensions are: %s' % (index_extension,
-                                    ', '.join(index_paths.keys())))
-    else:
-        index_path = index_paths[index_extension]
-        launch_status = click.launch(index_path)
-        if launch_status != 0:
-            click.echo(CONFIG.cfg_style('error', 'Viewing visualization '
-                                        'failed while attempting to open '
-                                        f'{index_path}'), err=True)
-        else:
-            while True:
-                click.echo(
-                    "Press the 'q' key, Control-C, or Control-D to quit. This "
-                    "view may no longer be accessible or work correctly after "
-                    "quitting.", nl=False)
-                # There is currently a bug in click.getchar where translation
-                # of Control-C and Control-D into KeyboardInterrupt and
-                # EOFError (respectively) does not work on Python 3. The code
-                # here should continue to work as expected when the bug is
-                # fixed in Click.
-                #
-                # https://github.com/pallets/click/issues/583
-                try:
-                    char = click.getchar()
-                    click.echo()
-                    if char in {'q', '\x03', '\x04'}:
-                        break
-                except (KeyboardInterrupt, EOFError):
-                    break
+                # If this file doesn't exist then 404
+                if not os.path.exists(self.path):
+                    self.send_error(404)
+                else:
+                    # Set response headers
+                    self.send_response(200)
+                    self.send_header('Content-type',
+                                     'application/octet-stream')
+                    self.send_header('Content-Disposition',
+                                     f'attachment; filename={self.path}')
+                    self.end_headers()
+
+                    # Read the file and send the contents
+                    with open(self.path, 'rb') as file:
+                        self.wfile.write(file.read())
+            else:
+                super().do_GET()
+
+    # Start server
+    port = 8000
+    server = HTTPServer(('', port), lambda *_: Handler(
+        *_, directory='/home/anthony/src/qiime2/q2view/build'))
+    click.echo(f'Agent started on port: {port})')
+
+    # Stop server on termination of main thread
+    def stop():
+        server.shutdown()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, stop)
+
+    # Start the server in a new thread
+    thread = threading.Thread(target=server.serve_forever)
+    thread.daemon = True
+    thread.start()
+
+    # Open page on server
+    launch_status = \
+        click.launch(f'http://localhost:{port}/?file={visualization_path}')
+
+    # Yell if there was an error
+    if launch_status != 0:
+        click.echo(
+            CONFIG.cfg_style('error', 'Viewing visualization failed while '
+                             f'attempting to open {visualization_path}'),
+            err=True)
+
+    # Wait for shut down request
+    while True:
+        click.echo("Press the 'q' key, Control-C, or Control-D to quit. This "
+                   "view may no longer be accessible or work correctly after "
+                   "quitting.")
+        # There is currently a bug in click.getchar where translation
+        # of Control-C and Control-D into KeyboardInterrupt and
+        # EOFError (respectively) does not work on Python 3. The code
+        # here should continue to work as expected when the bug is
+        # fixed in Click.
+        #
+        # https://github.com/pallets/click/issues/583
+        try:
+            char = click.getchar()
+            click.echo()
+            if char in {'q', '\x03', '\x04'}:
+                break
+        except (KeyboardInterrupt, EOFError):
+            break
 
 
 @tools.command(short_help="Extract a QIIME 2 Artifact or Visualization "
