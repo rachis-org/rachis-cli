@@ -573,8 +573,17 @@ def view(visualization_path, index_extension):
             else:
                 super().do_GET()
 
+    def get_free_port():
+        """Finds an available port on the system.
+        """
+        import socket
+
+        with socket.socket() as _socket:
+            _socket.bind(('localhost', 0))
+            return _socket.getsockname()[1]
+
     # Start server
-    port = 8000
+    port = get_free_port()
     server = HTTPServer(('', port), lambda *_: Handler(
         *_, directory='/home/anthony/src/qiime2/q2view/build'))
     click.echo(f'Agent started on port: {port})')
