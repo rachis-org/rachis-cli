@@ -586,7 +586,7 @@ def view(visualization_path, index_extension):
     port = get_free_port()
     server = HTTPServer(('', port), lambda *_: Handler(
         *_, directory='/home/anthony/src/qiime2/q2view/build'))
-    click.echo(f'Agent started on port: {port})')
+    click.echo(f'Agent started on port: {port}')
 
     # Stop server on termination of main thread
     def stop():
