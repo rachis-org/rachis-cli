@@ -36,6 +36,7 @@ def get_action_state(action):
     state = {
         'id': action.id,
         'name': action.name,
+        'type': action.type,
         'description': action.description,
         'signature': [],
         'epilog': [],

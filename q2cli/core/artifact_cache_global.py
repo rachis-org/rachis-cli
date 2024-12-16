@@ -6,9 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from qiime2.core.cache import Cache
-
-
 # Do not make this the default cache. If this is the default cache then we will
 # instantiate the default cache when the module is imported which will write a
 # process pool to the default cache which is undesirable if that isn't the
@@ -33,6 +30,7 @@ def set_used_artifact_cache(args):
 
     Should only be called once to init the used cache for this invocation.
     """
+    from qiime2.core.cache import Cache
     from q2cli.util import exit_with_error
 
     global _USED_ARTIFACT_CACHE
@@ -78,4 +76,6 @@ def get_used_artifact_cache():
         The default cache if the user didn't set a cache or the cache they set
         if they did set one.
     """
+    from qiime2.core.cache import Cache
+
     return Cache() if _USED_ARTIFACT_CACHE is None else _USED_ARTIFACT_CACHE

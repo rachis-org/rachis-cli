@@ -8,8 +8,6 @@
 
 import click
 
-from qiime2.core.type.util import is_collection_type
-
 
 def is_writable_dir(path):
     import os
@@ -85,6 +83,7 @@ class QIIME2Type(click.ParamType):
     def _convert_output(self, value, param, ctx):
         import os
         from q2cli.util import output_in_cache
+        from qiime2.core.type.util import is_collection_type
         # Click path fails to validate writability on new paths
 
         # Check if our output path is actually in a cache and if it is skip our
