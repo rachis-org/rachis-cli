@@ -271,8 +271,7 @@ class ActionCommand(BaseCommandMixin, click.Command):
 
         # If this action is a pipeline it needs additional options for
         # recycling and parallelization
-        action_obj = self._get_action()
-        if action_obj.type == 'pipeline':
+        if action['type'] == 'pipeline':
             self._misc.extend([
                 click.Option(['--recycle-pool'], required=False,
                              type=str,
