@@ -552,23 +552,25 @@ def view(visualization_path, index_extension):
             # a GET with it as just part of the url. Clearly I need to figure
             # out how to intercept/modify the behavior of the first get
             if self.path.endswith(('.qza', '.qzv')) \
-                    and 'file' not in self.path:
-                # Get the actual filepath out of the request
-
-                # If this file doesn't exist then 404
+                    and '/?file=/' not in self.path:
                 if not os.path.exists(self.path):
                     self.send_error(404)
                 else:
-                    # Set response headers
                     self.send_response(200)
-                    self.send_header('Content-type',
-                                     'application/octet-stream')
-                    self.send_header('Content-Disposition',
-                                     f'attachment; filename={self.path}')
+                    with open(self.path, 'rb') as file:
+                        self.wfile.write(file.read())
+            elif self.path.startswith('/_/') and str(result.uuid) in self.path:
+                file_path = self.path.split(str(result.uuid))[1]
+                file_path = result_path + file_path
+
+                if not os.path.exists(file_path):
+                    self.send_error(404)
+                else:
+                    self.send_response(200)
+                    self.send_header("Access-Control-Allow-Origin","*")
                     self.end_headers()
 
-                    # Read the file and send the contents
-                    with open(self.path, 'rb') as file:
+                    with open(file_path, 'rb') as file:
                         self.wfile.write(file.read())
             else:
                 super().do_GET()
@@ -582,10 +584,12 @@ def view(visualization_path, index_extension):
             _socket.bind(('localhost', 0))
             return _socket.getsockname()[1]
 
+    VENDOR_PATH = '/home/anthony/src/qiime2/q2view/build/'
+
     # Start server
     port = get_free_port()
-    server = HTTPServer(('', port), lambda *_: Handler(
-        *_, directory='/home/anthony/src/qiime2/q2view/build'))
+    server = HTTPServer(('', port),
+                        lambda *_: Handler(*_, directory=VENDOR_PATH))
     click.echo(f'Agent started on port: {port}')
 
     # Stop server on termination of main thread
@@ -602,7 +606,16 @@ def view(visualization_path, index_extension):
 
     # Open page on server
     launch_status = \
-        click.launch(f'http://localhost:{port}/?file={visualization_path}')
+        click.launch(f'http://localhost:{port}?file={visualization_path}')
+
+    import tempfile
+    from qiime2.sdk import Result
+
+    result = Result.load(visualization_path)
+
+    result_path = os.path.join(tempfile.gettempdir(), str(result.uuid))
+    if not os.path.exists(result_path):
+        result.extract(visualization_path, tempfile.gettempdir())
 
     # Yell if there was an error
     if launch_status != 0:
