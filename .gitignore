@@ -72,3 +72,7 @@ runinfo
 
 # vscode
 .vscode/
+
+# Version file from versioningit
+_version.py
+
