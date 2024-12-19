@@ -12,8 +12,11 @@ dynamic = ["version"]
 Homepage = "https://qiime2.org"
 Repository = "https://github.com/qiime2/q2cli"
 
-[project.entry-points.'qiime2.plugins']
-"q2cli" = "q2cli.plugin_setup:plugin"
+[project.scripts]
+"qiime" = "q2cli.__main__:qiime"
+
+[project.entry-points.'qiime2.usage_drivers']
+"cli" = "q2cli.core.usage:ReplayCLIUsage"
 
 [build-system]
 requires = [
