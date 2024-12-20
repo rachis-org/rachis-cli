@@ -584,7 +584,7 @@ def view(visualization_path, index_extension):
             _socket.bind(('localhost', 0))
             return _socket.getsockname()[1]
 
-    VENDOR_PATH = '/home/anthony/src/qiime2/q2view/build/'
+    VENDOR_PATH = '/home/anthony/src/qiime2/q2view/vendored/'
 
     # Start server
     port = get_free_port()
