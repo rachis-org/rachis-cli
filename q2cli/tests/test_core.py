@@ -220,7 +220,7 @@ class ReplayCLIUsageTests(unittest.TestCase):
 
     def test_param_is_metadata_col(self):
         cfg = ReplayConfig(use=ReplayCLIUsage(),
-                           use_recorded_metadata=False, pm=self.pm)
+                           use_recorded_metadata=False)
 
         actual = param_is_metadata_column(
             cfg, 'metadata', 'dummy_plugin', 'identity_with_metadata_column'
@@ -260,7 +260,6 @@ class ReplayCLIUsageTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tempdir:
             cfg = ReplayConfig(use=ReplayCLIUsage(),
-                               pm=self.pm,
                                md_out_dir=(tempdir + '/' + out_dir))
             dump_recorded_md_file(cfg, provnode, action_name, md_id, fn)
             out_path = pathlib.Path(tempdir) / out_dir / action_name / fn
@@ -285,7 +284,7 @@ class ReplayCLIUsageTests(unittest.TestCase):
     def test_build_import_usage_cli(self):
         ns = ReplayNamespaces()
         cfg = ReplayConfig(use=ReplayCLIUsage(),
-                           use_recorded_metadata=False, pm=self.pm)
+                           use_recorded_metadata=False)
         dag = self.das.concated_ints_v6.dag
         import_uuid = '8dea2f1a-2164-4a85-9f7d-e0641b1db22b'
         import_node = dag.get_node_data(import_uuid)
@@ -308,7 +307,7 @@ class ReplayCLIUsageTests(unittest.TestCase):
         plugin = 'dummy-plugin'
         action = 'concatenate-ints'
         cfg = ReplayConfig(use=ReplayCLIUsage(),
-                           use_recorded_metadata=False, pm=self.pm)
+                           use_recorded_metadata=False)
 
         ns = ReplayNamespaces()
         import_var_1 = CLIUsageVariable(
