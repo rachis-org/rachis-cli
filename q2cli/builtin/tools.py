@@ -533,7 +533,7 @@ def get_free_port():
                    '[default: html]')
 @click.option('--port', required=False, type=click.IntRange(1024, 49151),
               default=get_free_port(),
-              help='The port the to serve the webapp on.')
+              help='The port to serve the webapp on.')
 def view(visualization_path, index_extension, port):
     # Guard headless envs from having to import anything large
     import sys
