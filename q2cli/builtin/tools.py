@@ -575,8 +575,10 @@ def view(visualization_path, index_extension, port):
             elif self.path.startswith('/_/') and str(result.uuid) in self.path:
                 file_path = self.path.split(str(result.uuid))[1]
                 file_path = result_path + file_path
+                file_path = os.path.abspath(file_path)
 
-                if not os.path.exists(file_path):
+                if not os.path.exists(file_path) or \
+                        not file_path.startswith(result_path):
                     self.send_error(404)
                 else:
                     self.send_response(200)
