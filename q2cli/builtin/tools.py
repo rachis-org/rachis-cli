@@ -511,6 +511,16 @@ def _merge_metadata(paths):
     return metadata
 
 
+def get_free_port():
+    """Finds an available port on the system.
+    """
+    import socket
+
+    with socket.socket() as _socket:
+        _socket.bind(('localhost', 0))
+        return _socket.getsockname()[1]
+
+
 @tools.command(short_help='View a QIIME 2 Visualization.',
                help="Displays a QIIME 2 Visualization until the command "
                     "exits. To open a QIIME 2 Visualization so it can be "
@@ -521,7 +531,10 @@ def _merge_metadata(paths):
 @click.option('--index-extension', required=False, default='html',
               help='The extension of the index file that should be opened. '
                    '[default: html]')
-def view(visualization_path, index_extension):
+@click.option('--port', required=False, type=click.IntRange(1024, 49151),
+              default=get_free_port(),
+              help='The port the to serve the webapp on.')
+def view(visualization_path, index_extension, port):
     # Guard headless envs from having to import anything large
     import sys
 
@@ -575,19 +588,9 @@ def view(visualization_path, index_extension):
             else:
                 super().do_GET()
 
-    def get_free_port():
-        """Finds an available port on the system.
-        """
-        import socket
-
-        with socket.socket() as _socket:
-            _socket.bind(('localhost', 0))
-            return _socket.getsockname()[1]
-
     VENDOR_PATH = '/home/anthony/src/qiime2/q2view/vendored/'
 
     # Start server
-    port = get_free_port()
     server = HTTPServer(('', port),
                         lambda *_: Handler(*_, directory=VENDOR_PATH))
     click.echo(f'Agent started on port: {port}')
