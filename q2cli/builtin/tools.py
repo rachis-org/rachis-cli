@@ -535,7 +535,7 @@ def view(result_path, port):
     # Guard headless envs from having to import anything large
     import sys
 
-    if not os.getenv("DISPLAY") and sys.platform != "darwin":
+    if not os.getenv('DISPLAY') and sys.platform != 'darwin':
         raise click.UsageError(
             'Result viewing is currently not supported in headless '
             'environments. You can view Results at https://view.qiime2.org, '
@@ -579,7 +579,7 @@ def view(result_path, port):
                     self.send_error(404)
                 else:
                     self.send_response(200)
-                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
 
                     with open(file_path, 'rb') as file:
