@@ -521,29 +521,26 @@ def get_free_port():
         return _socket.getsockname()[1]
 
 
-@tools.command(short_help='View a QIIME 2 Visualization.',
-               help="Displays a QIIME 2 Visualization until the command "
-                    "exits. To open a QIIME 2 Visualization so it can be "
-                    "used after the command exits, use 'qiime tools extract'.",
+@tools.command(short_help='View a QIIME 2 Result.',
+               help="Displays a QIIME 2 Result until the command exits. To "
+                    "open a QIIME 2 Visualization so it can be used after the "
+                    "command exits, use 'qiime tools extract'.",
                cls=ToolCommand)
-@click.argument('visualization-path', metavar='VISUALIZATION',
+@click.argument('result-path', metavar='RESULT',
                 type=click.Path(file_okay=True, dir_okay=False, readable=True))
-@click.option('--index-extension', required=False, default='html',
-              help='The extension of the index file that should be opened. '
-                   '[default: html]')
 @click.option('--port', required=False, type=click.IntRange(1024, 65535),
               default=get_free_port(),
               help='The port to serve the webapp on.')
-def view(visualization_path, index_extension, port):
+def view(result_path, port):
     # Guard headless envs from having to import anything large
     import sys
 
     if not os.getenv("DISPLAY") and sys.platform != "darwin":
         raise click.UsageError(
-            'Visualization viewing is currently not supported in headless '
-            'environments. You can view Visualizations (and Artifacts) at '
-            'https://view.qiime2.org, or move the Visualization to an '
-            'environment with a display and view it with `qiime tools view`.')
+            'Result viewing is currently not supported in headless '
+            'environments. You can view Results at https://view.qiime2.org, '
+            'or move the Result to an environment with a display and view it '
+            'with `qiime tools view`.')
 
     import signal
     import threading
@@ -610,23 +607,22 @@ def view(visualization_path, index_extension, port):
     thread.start()
 
     # Open page on server
-    launch_status = \
-        click.launch(f'http://localhost:{port}?file={visualization_path}')
+    launch_status = click.launch(f'http://localhost:{port}?file={result_path}')
 
     import tempfile
     from qiime2.sdk import Result
 
-    result = Result.load(visualization_path)
+    result = Result.load(result_path)
 
     result_path = os.path.join(tempfile.gettempdir(), str(result.uuid))
     if not os.path.exists(result_path):
-        result.extract(visualization_path, tempfile.gettempdir())
+        result.extract(result_path, tempfile.gettempdir())
 
     # Yell if there was an error
     if launch_status != 0:
         click.echo(
             CONFIG.cfg_style('error', 'Viewing visualization failed while '
-                             f'attempting to open {visualization_path}'),
+                             f'attempting to open {result_path}'),
             err=True)
 
     # Wait for shut down request
