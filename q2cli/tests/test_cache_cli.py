@@ -1067,6 +1067,7 @@ class TestCacheCli(unittest.TestCase):
 
         for process in processes:
             process.wait()
+            process.stderr.flush()
             if process.stderr is not None:
                 err = process.stderr.read().decode()
                 if process.returncode != 0:
