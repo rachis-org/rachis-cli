@@ -531,7 +531,7 @@ def get_free_port():
 @click.option('--index-extension', required=False, default='html',
               help='The extension of the index file that should be opened. '
                    '[default: html]')
-@click.option('--port', required=False, type=click.IntRange(1024, 49151),
+@click.option('--port', required=False, type=click.IntRange(1024, 65535),
               default=get_free_port(),
               help='The port to serve the webapp on.')
 def view(visualization_path, index_extension, port):
