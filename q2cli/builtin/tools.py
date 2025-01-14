@@ -571,11 +571,11 @@ def view(result_path, port):
                         self.wfile.write(file.read())
             elif self.path.startswith('/_/') and str(result.uuid) in self.path:
                 file_path = self.path.split(str(result.uuid))[1]
-                file_path = result_path + file_path
+                file_path = extracted_path + file_path
                 file_path = os.path.abspath(file_path)
 
                 if not os.path.exists(file_path) or \
-                        not file_path.startswith(result_path):
+                        not file_path.startswith(extracted_path):
                     self.send_error(404)
                 else:
                     self.send_response(200)
@@ -614,8 +614,8 @@ def view(result_path, port):
 
     result = Result.load(result_path)
 
-    result_path = os.path.join(tempfile.gettempdir(), str(result.uuid))
-    if not os.path.exists(result_path):
+    extracted_path = os.path.join(tempfile.gettempdir(), str(result.uuid))
+    if not os.path.exists(extracted_path):
         result.extract(result_path, tempfile.gettempdir())
 
     # Yell if there was an error
