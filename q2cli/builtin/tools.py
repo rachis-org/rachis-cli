@@ -543,14 +543,13 @@ def view(result_path, port):
             'with `qiime tools view`.')
 
     import signal
+    import tempfile
     import threading
-    from q2cli.core.config import CONFIG
-    from http.server import HTTPServer
-
     import http.server
 
-    import tempfile
     from qiime2.sdk import Result
+
+    from q2cli.core.config import CONFIG
 
     # Load and extract result
     result = Result.load(result_path)
@@ -591,8 +590,8 @@ def view(result_path, port):
     VENDOR_PATH = '/home/anthony/src/qiime2/q2view/vendored/'
 
     # Start server
-    server = HTTPServer(('', port),
-                        lambda *_: Handler(*_, directory=VENDOR_PATH))
+    server = http.server.HTTPServer(
+        ('', port), lambda *_: Handler(*_, directory=VENDOR_PATH))
     click.echo(f'Agent started on port: {port}')
 
     # Stop server on termination of main thread
