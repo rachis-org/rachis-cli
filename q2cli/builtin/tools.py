@@ -549,6 +549,16 @@ def view(result_path, port):
 
     import http.server
 
+    import tempfile
+    from qiime2.sdk import Result
+
+    # Load and extract result
+    result = Result.load(result_path)
+
+    extracted_path = os.path.join(tempfile.gettempdir(), str(result.uuid))
+    if not os.path.exists(extracted_path):
+        result.extract(result_path, tempfile.gettempdir())
+
     class Handler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
             # Determine if this is a request for the file we are supposed to be
@@ -599,15 +609,6 @@ def view(result_path, port):
 
     # Open page on server
     launch_status = click.launch(f'http://localhost:{port}?file={result_path}')
-
-    import tempfile
-    from qiime2.sdk import Result
-
-    result = Result.load(result_path)
-
-    extracted_path = os.path.join(tempfile.gettempdir(), str(result.uuid))
-    if not os.path.exists(extracted_path):
-        result.extract(result_path, tempfile.gettempdir())
 
     # Yell if there was an error
     if launch_status != 0:
