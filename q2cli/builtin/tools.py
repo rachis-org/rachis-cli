@@ -543,6 +543,7 @@ def view(result_path, port):
             'with `qiime tools view`.')
 
     import signal
+    import random
     import tempfile
     import threading
     import http.server
@@ -569,7 +570,7 @@ def view(result_path, port):
                     self.send_response(200)
                     with open(self.path, 'rb') as file:
                         self.wfile.write(file.read())
-            elif self.path.startswith('/_/') and str(result.uuid) in self.path:
+            elif self.path.startswith(f'/_/{session}/{result.uuid}/'):
                 file_path = self.path.split(str(result.uuid))[1]
                 file_path = extracted_path + file_path
                 file_path = os.path.abspath(file_path)
@@ -588,6 +589,9 @@ def view(result_path, port):
                 super().do_GET()
 
     VENDOR_PATH = '/home/anthony/src/qiime2/q2view/vendored/'
+    CHAR_SET = 'abcdefghijklmnopqrstuvwxyz0123456789'
+    SESSION_LEN = 11
+    session = ''.join(random.choice(CHAR_SET) for i in range(SESSION_LEN))
 
     # Start server
     server = http.server.HTTPServer(
@@ -607,7 +611,8 @@ def view(result_path, port):
     thread.start()
 
     # Open page on server
-    launch_status = click.launch(f'http://localhost:{port}?file={result_path}')
+    launch_status = click.launch(
+        f'http://localhost:{port}?file={result_path}&session={session}')
 
     # Yell if there was an error
     if launch_status != 0:
