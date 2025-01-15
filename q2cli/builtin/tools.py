@@ -553,16 +553,7 @@ def view(result_path, port):
         def do_GET(self):
             # Determine if this is a request for the file we are supposed to be
             # viewing
-            #
-            # TODO: This is dumb, currently when we click.launch with our path
-            # as the file search parameter it will GET /?file={path}. If we
-            # respond to that GET with this then we download the file and don't
-            # even actually load the page. That is obviously undesirable, so
-            # instead I take that file search param in js in q2view and send
-            # a GET with it as just part of the url. Clearly I need to figure
-            # out how to intercept/modify the behavior of the first get
-            if self.path.endswith(('.qza', '.qzv')) \
-                    and '/?file=/' not in self.path:
+            if self.path == result_path:
                 if not os.path.exists(self.path):
                     self.send_error(404)
                 else:
