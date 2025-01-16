@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2023, QIIME 2 development team.
+# Copyright (c) 2016-2025, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -7,8 +7,6 @@
 # ----------------------------------------------------------------------------
 
 import click
-
-from qiime2.core.type.util import is_collection_type
 
 
 def is_writable_dir(path):
@@ -85,6 +83,7 @@ class QIIME2Type(click.ParamType):
     def _convert_output(self, value, param, ctx):
         import os
         from q2cli.util import output_in_cache
+        from qiime2.core.type.util import is_collection_type
         # Click path fails to validate writability on new paths
 
         # Check if our output path is actually in a cache and if it is skip our
