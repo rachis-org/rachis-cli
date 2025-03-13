@@ -158,7 +158,6 @@ class DeploymentCache:
 
     def _get_cached_requirements(self):
         import os.path
-        import pkg_resources
 
         path = os.path.join(self._cache_dir, 'requirements.txt')
 
@@ -177,7 +176,7 @@ class DeploymentCache:
                     # Pop off the empty newline at the bottom of the file
                     deps.remove('')
                 return deps
-            except pkg_resources.RequirementParseError:
+            except Exception:
                 # Unreadable cached requirements, trigger a cache refresh.
                 return set()
 
