@@ -171,7 +171,12 @@ class DeploymentCache:
             with open(path, 'r') as fh:
                 contents = fh.read()
             try:
-                return set(pkg_resources.parse_requirements(contents))
+                # Each line in the file is a different dep
+                deps = set(contents.split('\n'))
+                if '' in deps:
+                    # Pop off the empty newline at the bottom of the file
+                    deps.remove('')
+                return deps
             except pkg_resources.RequirementParseError:
                 # Unreadable cached requirements, trigger a cache refresh.
                 return set()
