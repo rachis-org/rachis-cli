@@ -12,7 +12,7 @@ import os.path
 import unittest
 import unittest.mock
 import tempfile
-import pkg_resources
+import importlib.resources
 
 from click.testing import CliRunner
 from qiime2.core.testing.type import (IntSequence1, IntSequence2, Mapping,
@@ -35,7 +35,9 @@ SECOND_SPLIT = '\n\nSee above for debug info.'
 
 
 def get_data_path(filename):
-    return pkg_resources.resource_filename('q2cli.tests', 'data/%s' % filename)
+    # os.path.join to make this a str not pathlib.Path
+    return os.path.join(
+        importlib.resources.files('q2cli.tests'), f'data/{filename}')
 
 
 class TestCacheCli(unittest.TestCase):
