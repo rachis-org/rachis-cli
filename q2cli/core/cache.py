@@ -133,12 +133,10 @@ class DeploymentCache:
     def _get_current_requirements(self):
         """Includes installed versions of q2cli and QIIME 2 plugins."""
         import os
-        import pkg_resources
+        import importlib.metadata
         import q2cli
 
-        reqs = {
-            pkg_resources.Requirement.parse('q2cli == %s' % q2cli.__version__)
-        }
+        reqs = {f'q2cli=={q2cli.__version__}'}
 
         # A distribution (i.e. Python package) can have multiple plugins, where
         # each plugin is its own entry point. A distribution's `Requirement` is
@@ -158,14 +156,14 @@ class DeploymentCache:
         # for ep in qiime2.sdk.PluginManager.iter_entry_points():
         #     reqs.add(ep.dist.as_requirement())
         #
-        for entry_point in pkg_resources.iter_entry_points(
+        for entry_point in importlib.metadata.entry_points(
                 group='qiime2.plugins'):
             if 'QIIMETEST' in os.environ:
                 if entry_point.name in ('dummy-plugin', 'other-plugin'):
-                    reqs.add(entry_point.dist.as_requirement())
+                    reqs.add(f'{entry_point.name}=={entry_point.dist.version}')
             else:
                 if entry_point.name not in ('dummy-plugin', 'other-plugin'):
-                    reqs.add(entry_point.dist.as_requirement())
+                    reqs.add(f'{entry_point.name}=={entry_point.dist.version}')
 
         return reqs
 
