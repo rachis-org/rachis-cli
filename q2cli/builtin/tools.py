@@ -511,16 +511,6 @@ def _merge_metadata(paths):
     return metadata
 
 
-def get_free_port():
-    """Finds an available port on the system.
-    """
-    import socket
-
-    with socket.socket() as _socket:
-        _socket.bind(('localhost', 0))
-        return _socket.getsockname()[1]
-
-
 @tools.command(short_help='View a QIIME 2 Result.',
                help="Displays a QIIME 2 Result until the command exits. To "
                     "open a QIIME 2 Visualization so it can be used after the "
@@ -529,8 +519,7 @@ def get_free_port():
 @click.argument('result-path', metavar='RESULT',
                 type=click.Path(file_okay=True, dir_okay=False, readable=True))
 @click.option('--port', required=False, type=click.IntRange(1024, 65535),
-              default=get_free_port(),
-              help='The port to serve the webapp on.')
+              default=None, help='The port to serve the webapp on.')
 def view(result_path, port):
     # Guard headless envs from having to import anything large
     import sys
@@ -600,8 +589,25 @@ def view(result_path, port):
                 super().do_GET()
 
     VENDOR_PATH = '/home/anthony/src/qiime2/q2view/vendored/'
+
+    # Set up the server socket
+    import socket
+
+    if port is None:
+        port = 0
+
+    server_socket = socket.socket()
+    server_socket.bind(('localhost', 0 if port is None else port))
+    port = server_socket.getsockname()[1]
+
+    # Start up the server
     server = http.server.HTTPServer(
-        ('', port), lambda *_: Handler(*_, directory=VENDOR_PATH))
+        ('localhost', port), lambda *_: Handler(*_, directory=VENDOR_PATH),
+        bind_and_activate=False)
+    server.socket = server_socket
+
+    # Don't listen until the server is already going
+    server_socket.listen(0)
     click.echo(f'Agent started on port: {port}')
 
     # Stop server on termination of main thread
