@@ -8,7 +8,7 @@
 
 import collections
 import os
-import pkg_resources
+import importlib.resources
 import re
 import shlex
 import textwrap
@@ -447,12 +447,13 @@ class ReplayCLIUsage(CLIUsage):
         'set -e -x',
         ''
     ]
-    copyright = pkg_resources.resource_string(
-        __package__, 'assets/copyright_note.txt'
-    ).decode('utf-8').split('\n')
-    how_to = pkg_resources.resource_string(
-        __package__, 'assets/cli_howto.txt'
-    ).decode('utf-8').split('\n')
+    print(__package__)
+    copyright = importlib.resources.read_text(
+        f'{__package__}.assets', 'copyright_note.txt'
+    ).split('\n')
+    how_to = importlib.resources.read_text(
+        f'{__package__}.assets', 'cli_howto.txt'
+    ).split('\n')
 
     def __init__(self, enable_assertions=False, action_collection_size=None):
         '''

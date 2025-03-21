@@ -133,12 +133,10 @@ class DeploymentCache:
     def _get_current_requirements(self):
         """Includes installed versions of q2cli and QIIME 2 plugins."""
         import os
-        import pkg_resources
+        import importlib.metadata
         import q2cli
 
-        reqs = {
-            pkg_resources.Requirement.parse('q2cli == %s' % q2cli.__version__)
-        }
+        reqs = {f'q2cli=={q2cli.__version__}'}
 
         # A distribution (i.e. Python package) can have multiple plugins, where
         # each plugin is its own entry point. A distribution's `Requirement` is
@@ -147,31 +145,19 @@ class DeploymentCache:
         # containing one or more plugins. It is not necessary to track
         # individual plugin names and versions in order to determine if the
         # cache is outdated.
-        #
-        # TODO: this code is (more or less) copied from
-        # `qiime2.sdk.PluginManager.iter_entry_points`. Importing QIIME is
-        # currently slow, and it adds ~600-700ms to any CLI command. This makes
-        # the CLI pretty unresponsive, especially when running help/informative
-        # commands. Replace with the following lines when
-        # https://github.com/qiime2/qiime2/issues/151 is fixed:
-        #
-        # for ep in qiime2.sdk.PluginManager.iter_entry_points():
-        #     reqs.add(ep.dist.as_requirement())
-        #
-        for entry_point in pkg_resources.iter_entry_points(
+        for entry_point in importlib.metadata.entry_points(
                 group='qiime2.plugins'):
             if 'QIIMETEST' in os.environ:
                 if entry_point.name in ('dummy-plugin', 'other-plugin'):
-                    reqs.add(entry_point.dist.as_requirement())
+                    reqs.add(f'{entry_point.name}=={entry_point.dist.version}')
             else:
                 if entry_point.name not in ('dummy-plugin', 'other-plugin'):
-                    reqs.add(entry_point.dist.as_requirement())
+                    reqs.add(f'{entry_point.name}=={entry_point.dist.version}')
 
         return reqs
 
     def _get_cached_requirements(self):
         import os.path
-        import pkg_resources
 
         path = os.path.join(self._cache_dir, 'requirements.txt')
 
@@ -184,8 +170,13 @@ class DeploymentCache:
             with open(path, 'r') as fh:
                 contents = fh.read()
             try:
-                return set(pkg_resources.parse_requirements(contents))
-            except pkg_resources.RequirementParseError:
+                # Each line in the file is a different dep
+                deps = set(contents.split('\n'))
+                if '' in deps:
+                    # Pop off the empty newline at the bottom of the file
+                    deps.remove('')
+                return deps
+            except Exception:
                 # Unreadable cached requirements, trigger a cache refresh.
                 return set()
 
