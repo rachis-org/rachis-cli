@@ -17,7 +17,7 @@ requirements:
   - python  {{ python }}
   - setuptools
   - click >=8.1
-  - qiime2 {{ qiime2_epoch }}.*
+  - qiime2 >={{ qiime2 }}
   build:
   - python {{ python }}
   - setuptools
