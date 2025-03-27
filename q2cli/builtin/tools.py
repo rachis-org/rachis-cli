@@ -593,11 +593,12 @@ def view(result_path, port):
     # Set up the server socket
     import socket
 
-    if port is None:
-        port = 0
-
     server_socket = socket.socket()
+    # If port is None then slap a 0 into here to get a free port
     server_socket.bind(('localhost', 0 if port is None else port))
+    # Get the port off the opened socket, if a port was passed, this will set
+    # the port to itself no harm done. If no port was passed, this will get the
+    # open port that .bind found.
     port = server_socket.getsockname()[1]
 
     # Start up the server
