@@ -1,4 +1,4 @@
-.PHONY: all lint test install dev clean distclean
+.PHONY: all lint test vendor-view install dev clean distclean
 
 PYTHON ?= python
 PREFIX ?= $(CONDA_PREFIX)
@@ -11,6 +11,11 @@ lint:
 
 test: all
 	QIIMETEST= pytest
+
+vendor-view:
+	cd q2cli/builtin/_vendored_view && \
+	npm install --no-save && \
+	npm run vendor
 
 # install pytest-xdist plugin for the `-n auto` argument.
 mystery-stew: all
