@@ -447,7 +447,7 @@ class ReplayCLIUsage(CLIUsage):
         'set -e -x',
         ''
     ]
-    print(__package__)
+
     copyright = importlib.resources.read_text(
         f'{__package__}.assets', 'copyright_note.txt'
     ).split('\n')
