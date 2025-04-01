@@ -715,21 +715,34 @@ def cache_create(cache):
               type=click.Path(exists=True, file_okay=False, dir_okay=True,
                               readable=True),
               help='Path to an existing cache to remove the key from.')
-@click.option('--key', required=True,
-              help='The key to remove from the cache.')
+@click.option('--key', required=True, multiple=True,
+              help='The key to remove from the cache. Pass multiple times to '
+                   'remove multiple keys')
 def cache_remove(cache, key):
     from qiime2.core.cache import Cache
     from q2cli.core.config import CONFIG
 
+    # I don't want to instantiate this every time in the loop
     try:
         _cache = Cache(cache)
-        _cache.remove(key)
     except Exception as e:
-        header = "There was a problem removing the key '%s' from the " \
-                 "cache '%s':" % (key, cache)
+        header = f"The path '{cache}' is not a valid QIIME 2 cache."
         q2cli.util.exit_with_error(e, header=header, traceback=None)
 
-    success = "Removed key '%s' from cache '%s'" % (key, cache)
+    for _key in key:
+        try:
+            # TODO: This will run gc after every key removal. Don't need to do
+            # that
+            _cache.remove(_key)
+        except Exception as e:
+            header = f"There was a problem removing the key '{_key}' from "\
+                     f"the cache '{cache}'"
+            q2cli.util.exit_with_error(e, header=header, traceback=None)
+        else:
+            success = f"Removed key '{_key}' from cache '{cache}'"
+            click.echo(CONFIG.cfg_style('success', success))
+
+    success = f"Removed key(s) '{key}' from cache '{cache}'"
     click.echo(CONFIG.cfg_style('success', success))
 
 
