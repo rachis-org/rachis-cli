@@ -588,7 +588,7 @@ def view(result_path, port):
             else:
                 super().do_GET()
 
-    VENDOR_PATH = 'q2cli/builtin/_vendored_view/vendored'
+    VENDOR_PATH = 'q2cli/assets/view/'
 
     # Set up the server socket
     import socket

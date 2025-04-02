@@ -15,7 +15,7 @@ test: all
 vendor-view:
 	cd q2cli/builtin/_vendored_view && \
 	npm install --no-save && \
-	npm run vendor
+	npm run vendor --VENDOR_DIR=../../assets/view
 
 # install pytest-xdist plugin for the `-n auto` argument.
 mystery-stew: all
