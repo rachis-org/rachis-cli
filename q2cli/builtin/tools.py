@@ -716,8 +716,8 @@ def cache_create(cache):
                               readable=True),
               help='Path to an existing cache to remove the key from.')
 @click.option('--key', required=True, multiple=True,
-              help='The key to remove from the cache. Pass `key` parameter multiple times to '
-                   'remove multiple keys.')
+              help='The key to remove from the cache. Pass `key` parameter '
+                   'multiple times to remove multiple keys.')
 def cache_remove(cache, key):
     from qiime2.core.cache import Cache
     from q2cli.core.config import CONFIG
