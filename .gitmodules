@@ -1,4 +1,4 @@
 [submodule "q2view"]
 	path = q2view
-	url = git@github.com:qiime2/q2view.git
+	url = https://github.com/qiime2/q2view.git
 	branch = vendored-view
