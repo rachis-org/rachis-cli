@@ -14,11 +14,11 @@ test: all
 
 # Try to have the worker init the submodule when building the package on GitHub
 # Actions. Idk if this is needed.
-init-view-submodule: all
-	git submodule init
-	git submodule update
+# init-view-submodule: all
+# 	git submodule init
+# 	git submodule update
 
-vendor-view: init-view-submodule all
+vendor-view: all
 	cd vendored_q2view && \
 	npm install --no-save && \
 	npm run vendor --VENDOR_DIR=../q2cli/assets/view
