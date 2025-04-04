@@ -1,4 +1,4 @@
-.PHONY: all lint test vendor-view install dev clean distclean
+.PHONY: all lint test init-view-submodule vendor-view install dev clean distclean
 
 PYTHON ?= python
 PREFIX ?= $(CONDA_PREFIX)
@@ -12,21 +12,27 @@ lint:
 test: all
 	QIIMETEST= pytest
 
-vendor-view:
-	cd q2view && \
+# Try to have the worker init the submodule when building the package on GitHub
+# Actions. Idk if this is needed.
+init-view-submodule: all
+	git submodule init
+	git submodule update
+
+vendor-view: init-view-submodule all
+	cd vendored_q2view && \
 	npm install --no-save && \
-	npm run vendor --VENDOR_DIR=../../assets/view
+	npm run vendor --VENDOR_DIR=../q2cli/assets/view
 
 # install pytest-xdist plugin for the `-n auto` argument.
 mystery-stew: all
 	MYSTERY_STEW= pytest -k mystery_stew -n auto
 
-install: all
+install: vendor-view all
 	$(PYTHON) -m pip install -v . && \
 	mkdir -p $(PREFIX)/etc/conda/activate.d && \
 	cp hooks/50_activate_q2cli_tab_completion.sh $(PREFIX)/etc/conda/activate.d/
 
-dev: all
+dev: vendor-view all
 	pip install -e . && \
 	mkdir -p $(PREFIX)/etc/conda/activate.d && \
 	cp hooks/50_activate_q2cli_tab_completion.sh $(PREFIX)/etc/conda/activate.d/
