@@ -19,7 +19,7 @@ test: all
 # 	git submodule update
 
 vendor-view: all
-	cd vendored_q2view && \
+	cd q2view && \
 	npm install --no-save && \
 	npm run vendor --VENDOR_DIR=../q2cli/assets/view
 
