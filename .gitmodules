@@ -1,4 +1,4 @@
-[submodule "vendored_q2view"]
-	path = vendored_q2view
-	url = git@github.com:Oddant1/q2view.git
+[submodule "q2view"]
+	path = q2view
+	url = git@github.com:qiime2/q2view.git
 	branch = vendored-view
