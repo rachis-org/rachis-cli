@@ -13,7 +13,7 @@ test: all
 	QIIMETEST= pytest
 
 vendor-view:
-	cd q2cli/builtin/_vendored_view && \
+	cd q2view && \
 	npm install --no-save && \
 	npm run vendor --VENDOR_DIR=../../assets/view
 
