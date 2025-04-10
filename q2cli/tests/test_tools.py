@@ -578,9 +578,38 @@ class TestCacheTools(unittest.TestCase):
             tools,
             ['cache-remove', '--cache', str(self.cache.path), '--key', 'key'])
 
-        success = "Removed key 'key' from cache '%s'\n" % self.cache.path
+        success = \
+            f"Removed key 'key' from cache '{str(self.cache.path)}'\n" \
+            f"Removed key(s) '('key',)' from cache '{str(self.cache.path)}'\n"
         self.assertEqual(success, result.output)
         self.assertFalse('key' in self.cache.get_keys())
+
+    def test_cache_remove_multiple(self):
+        self.cache.save(self.art1, 'key1')
+        self.cache.save(self.art1, 'key2')
+        self.cache.save(self.art1, 'key3')
+
+        keys = self.cache.get_keys()
+        self.assertEqual(set(['key1', 'key2', 'key3']), keys)
+
+        result = self.runner.invoke(
+            tools,
+            ['cache-remove', '--cache', str(self.cache.path), '--key', 'key1',
+             '--key', 'key2']
+        )
+
+        success = \
+            f"Removed key 'key1' from cache '{str(self.cache.path)}'\n" \
+            f"Removed key 'key2' from cache '{str(self.cache.path)}'\n" \
+            "Removed key(s) '('key1', 'key2')' from cache " \
+            f"'{str(self.cache.path)}'\n"
+
+        new_keys = self.cache.get_keys()
+
+        self.assertEqual(success, result.output)
+        self.assertFalse('key1' in new_keys)
+        self.assertFalse('key2' in new_keys)
+        self.assertTrue('key3' in new_keys)
 
     def test_cache_garbage_collection(self):
         # Data referenced directly by key
