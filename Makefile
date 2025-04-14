@@ -12,12 +12,6 @@ lint:
 test: all
 	QIIMETEST= pytest
 
-# Try to have the worker init the submodule when building the package on GitHub
-# Actions. Idk if this is needed.
-# init-view-submodule: all
-# 	git submodule init
-# 	git submodule update
-
 vendor-view: all
 	cd q2view && \
 	npm install --no-save && \
