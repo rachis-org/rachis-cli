@@ -520,7 +520,9 @@ def _merge_metadata(paths):
                 type=click.Path(file_okay=True, dir_okay=False, readable=True))
 @click.option('--port', required=False, type=click.IntRange(1024, 65535),
               default=None, help='The port to serve the webapp on.')
-def view(result_path, port):
+@click.option('--verbose', is_flag=True,
+              help='Display all GET requests in the terminal.')
+def view(result_path, port, verbose):
     # Guard headless envs from having to import anything large
     import sys
 
@@ -556,6 +558,10 @@ def view(result_path, port):
     # Start server
     class Handler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
+            # Redirect the output from these requests to devnull if not verbose
+            if not verbose:
+                sys.stderr = open(os.devnull, 'w')
+
             # Determine if this is a request for the file we are supposed to be
             # viewing
             if self.path == result_path:
@@ -624,8 +630,10 @@ def view(result_path, port):
     thread.start()
 
     # Open page on server
-    launch_status = click.launch(
-        f'http://localhost:{port}?file={result_path}&session={session}')
+    url = f'http://localhost:{port}?file={result_path}&session={session}'
+    launch_status = click.launch(url)
+    click.echo('Your view should open in your default browser shortly. You '
+               f'may open it manually at the URL: {url}')
 
     # Yell if there was an error
     if launch_status != 0:
