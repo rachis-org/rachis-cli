@@ -1059,7 +1059,9 @@ def provenance_replay(
     """
     from qiime2.core.archive.provenance_lib.replay import replay_provenance
     from qiime2.sdk.util import get_available_usage_drivers
+    from q2cli.util import get_plugin_manager
 
+    get_plugin_manager()
     usage_drivers = get_available_usage_drivers()
     try:
         usage_driver_type = usage_drivers[usage_driver]
@@ -1210,7 +1212,9 @@ def supplement_replay(
     """
     from qiime2.core.archive.provenance_lib.replay import replay_supplement
     from qiime2.sdk.util import get_available_usage_drivers
+    from q2cli.util import get_plugin_manager
 
+    get_plugin_manager()
     usage_drivers = get_available_usage_drivers()
     usage_driver_types = list(usage_drivers.values())
     if not usage_driver_types:
