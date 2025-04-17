@@ -538,6 +538,7 @@ def view(result_path, port, verbose):
     import tempfile
     import threading
     import http.server
+    import contextlib
 
     from qiime2.sdk import Result
 
@@ -559,40 +560,40 @@ def view(result_path, port, verbose):
     class Handler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
             # Redirect the output from these requests to devnull if not verbose
-            if not verbose:
-                sys.stderr = open(os.devnull, 'w')
+            with contextlib.redirect_stderr(
+                    sys.stderr if verbose else open(os.devnull, 'w')):
+                # Determine if this is a request for the file we are supposed
+                # to be viewing
+                if self.path == result_path:
+                    if not os.path.exists(self.path):
+                        self.send_error(404)
+                    else:
+                        self.send_response(200)
+                        with open(self.path, 'rb') as file:
+                            self.wfile.write(file.read())
+                # Determine if this is a request for a file within the
+                # visualization
+                elif self.path.startswith(f'/_/{session}/{result.uuid}/'):
+                    file_path = self.path.split(str(result.uuid))[1]
+                    file_path = extracted_path + file_path
+                    file_path = os.path.abspath(file_path)
 
-            # Determine if this is a request for the file we are supposed to be
-            # viewing
-            if self.path == result_path:
-                if not os.path.exists(self.path):
-                    self.send_error(404)
+                    if not os.path.exists(file_path) or \
+                            not file_path.startswith(extracted_path):
+                        self.send_error(404)
+                    else:
+                        self.send_response(200)
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+
+                        with open(file_path, 'rb') as file:
+                            self.wfile.write(file.read())
+                # Otherwise default to super class. This will respond
+                # appropriately to requests for assets that are part of the
+                # vendored view app and will reject any requests for files
+                # outside the served directory
                 else:
-                    self.send_response(200)
-                    with open(self.path, 'rb') as file:
-                        self.wfile.write(file.read())
-            # Determine if this is a request for a file within the
-            # visualization
-            elif self.path.startswith(f'/_/{session}/{result.uuid}/'):
-                file_path = self.path.split(str(result.uuid))[1]
-                file_path = extracted_path + file_path
-                file_path = os.path.abspath(file_path)
-
-                if not os.path.exists(file_path) or \
-                        not file_path.startswith(extracted_path):
-                    self.send_error(404)
-                else:
-                    self.send_response(200)
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
-
-                    with open(file_path, 'rb') as file:
-                        self.wfile.write(file.read())
-            # Otherwise default to super class. This will respond appropriately
-            # to requests for assets that are part of the vendored view app and
-            # will reject any requests for files outside the served directory
-            else:
-                super().do_GET()
+                    super().do_GET()
 
     VENDOR_PATH = 'q2cli/assets/view/'
 
