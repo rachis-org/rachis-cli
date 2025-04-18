@@ -1338,3 +1338,89 @@ def supplement_replay(
         verbose=verbose,
         dump_recorded_metadata=dump_recorded_metadata
     )
+
+
+@tools.command(
+    name='annotation-create',
+    short_help='Add a new Annotation to a QIIME 2 Result.',
+    help='Attach an Annotation to an existing Artifact or Visualization.'
+         ' Supported for QIIME 2 archives of version 7.0+.',
+    cls=ToolCommand
+)
+@click.option(
+    '--input-path',
+    required=True,
+    metavar=_COMBO_METAVAR,
+    type=click.Path(exists=True, file_okay=True,
+                    dir_okay=False, readable=True),
+    help='Path to the `.qza` or `.qzv` you want to annotate.'
+)
+@click.option(
+    '--annotation-type',
+    required=True,
+    type=click.Choice(['Note'], case_sensitive=True),
+    help='Annotation type to create.'
+)
+@click.option(
+    '--name',
+    required=True,
+    help='Name for your Annotation (must be unique for a given Result).'
+)
+@click.option(
+    '--text',
+    required=False,
+    help='Inline text for the Annotation.'
+         ' Mutually exclusive with `--file`.'
+)
+@click.option(
+    '--file',
+    'filepath',
+    required=False,
+    type=click.Path(exists=True, file_okay=True,
+                    dir_okay=False, readable=True),
+    help='Path to a text file whose contents will be added'
+         ' to your Annotation. Mutually exclusive with `--text`.'
+)
+@click.option(
+    '--output-path',
+    required=False,
+    type=click.Path(file_okay=True, dir_okay=False, writable=True),
+    help='Where to write the newly annotated result.'
+         '[default: overwrite input filepath]'
+)
+def annotation_create(input_path, annotation_type,
+                      name, text, filepath, output_path):
+    """Load a Result, add an Annotation and save."""
+    import qiime2.sdk
+    from qiime2.core.annotate import Note
+    from q2cli.core.config import CONFIG
+    from q2cli.util import get_plugin_manager
+
+    get_plugin_manager()
+    # enforce exactly one of `--text` or `--file`
+    if (text is None) == (filepath is None):
+        raise click.UsageError('Exactly one of `--text` or `--file`'
+                               ' must be provided.')
+
+    result = qiime2.sdk.Result.load(input_path)
+
+    # TODO: add support for additional annotation types post 7.0
+    if annotation_type == 'Note':
+        annotation = Note(name=name, text=text, filepath=filepath)
+    else:
+        raise click.BadParameter('Unsupported annotation type: '
+                                 f'{annotation_type}')
+
+    try:
+        result.add_annotation(annotation)
+    except Exception as e:
+        click.echo(CONFIG.cfg_style('error', str(e)), err=True)
+        raise click.Abort()
+
+    out_fp = output_path or input_path
+    result.save(out_fp)
+
+    click.echo(
+        CONFIG.cfg_style('success',
+                         f'Added {annotation_type} "{name}" to {out_fp}')
+    )
