@@ -34,5 +34,6 @@ dev: vendor-view all
 	cp hooks/50_activate_q2cli_tab_completion.sh $(PREFIX)/etc/conda/activate.d/
 
 clean: distclean
+	rm -rf ./q2cli/assets
 
 distclean: ;
