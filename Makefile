@@ -13,6 +13,8 @@ test: all
 	QIIMETEST= pytest
 
 vendor-view: all
+	git submodule init && \
+	git submodule update && \
 	cd q2view && \
 	npm install --no-save && \
 	npm run vendor --VENDOR_DIR=../q2cli/assets/view
