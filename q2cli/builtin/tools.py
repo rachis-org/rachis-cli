@@ -1386,7 +1386,7 @@ def supplement_replay(
     required=False,
     type=click.Path(file_okay=True, dir_okay=False, writable=True),
     help='Where to write the newly annotated result.'
-         '[default: overwrite input filepath]'
+         '[default: overwrite input file]'
 )
 def annotation_create(input_path, annotation_type,
                       name, text, filepath, output_path):
@@ -1423,4 +1423,53 @@ def annotation_create(input_path, annotation_type,
     click.echo(
         CONFIG.cfg_style('success',
                          f'Added {annotation_type} "{name}" to {out_fp}')
+    )
+
+
+@tools.command(
+    name='annotation-remove',
+    short_help='Remove an Annotation from a QIIME 2 Result.',
+    help='Remove an existing Annotation (by name) from'
+         ' an Artifact or Visualization.'
+)
+@click.option(
+    '--input-path',
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help='The `.qza` or `.qzv` from which to remove the Annotation.'
+)
+@click.option(
+    '--name',
+    required=True,
+    help='The name of the Annotation to remove.'
+)
+@click.option(
+    '--output-path',
+    required=False,
+    type=click.Path(dir_okay=False, writable=True),
+    help='Where to write the updated Result.'
+         '[default: overwrite input filepath]'
+)
+def annotation_remove(input_path, name, output_path):
+    """Load a Result, remove an Annotation by name and save."""
+    import qiime2.sdk
+    from q2cli.core.config import CONFIG
+    from q2cli.util import get_plugin_manager
+
+    get_plugin_manager()
+
+    result = qiime2.sdk.Result.load(input_path)
+
+    try:
+        result.remove_annotation(name)
+    except Exception as e:
+        click.echo(CONFIG.cfg_style('error', str(e)), err=True)
+        raise click.Abort()
+
+    out_fp = output_path or input_path
+    result.save(out_fp)
+
+    click.echo(
+        CONFIG.cfg_style('success',
+                         f'Removed annotation "{name}" from {out_fp}')
     )
