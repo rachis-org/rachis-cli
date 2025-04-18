@@ -523,6 +523,9 @@ def _merge_metadata(paths):
 @click.option('--verbose', is_flag=True,
               help='Display all GET requests in the terminal.')
 def view(result_path, port, verbose):
+    # Get the abspath to the result
+    result_path = os.path.abspath(result_path)
+
     # Guard headless envs from having to import anything large
     import sys
 
