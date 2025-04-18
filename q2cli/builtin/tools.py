@@ -597,7 +597,11 @@ def view(result_path, port, verbose):
                     else:
                         super().do_GET()
 
-    VENDOR_PATH = 'q2cli/assets/view/'
+    # Get the path to the packaged vendored view
+    import importlib
+    MODULE_INIT = importlib.import_module('q2cli').__file__
+    MODULE_BASE_DIR = os.path.abspath(os.path.dirname(MODULE_INIT))
+    VENDOR_PATH = os.path.join(MODULE_BASE_DIR, 'assets', 'view')
 
     # Set up the server socket
     import socket
