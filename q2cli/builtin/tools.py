@@ -601,6 +601,11 @@ def view(result_path, port, verbose):
                         super().do_GET()
 
     # Get the path to the packaged vendored view
+    # TODO: This won't work if we start packaging QIIME 2 as a wheel, we will
+    # have to reimplement this used importlib.resources and it may be mildly
+    # annoying to make things work properly. It's hard to tell right now since
+    # we do not use a wheel.
+    # https://docs.python.org/3/library/importlib.resources.html
     import importlib
     MODULE_INIT = importlib.import_module('q2cli').__file__
     MODULE_BASE_DIR = os.path.abspath(os.path.dirname(MODULE_INIT))
