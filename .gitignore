@@ -76,3 +76,5 @@ runinfo
 # Version file from versioningit
 _version.py
 
+# Built vendored view
+q2cli/assets/view

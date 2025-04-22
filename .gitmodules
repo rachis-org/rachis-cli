@@ -1,0 +1,3 @@
+[submodule "q2view"]
+	path = q2view
+	url = https://github.com/qiime2/q2view.git
