@@ -88,6 +88,6 @@ def info(config_level):
         click.secho('To get help with configuring and/or understanding '
                     'QIIME 2 parallelization, visit '
                     'https://use.qiime2.org/en/latest/references/'
-                    'parallel-configuration.html.')
+                    'parallel-configuration.html')
 
     click.secho('\n')
