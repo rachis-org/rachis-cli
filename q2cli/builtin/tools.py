@@ -571,8 +571,11 @@ def view(result_path, port, verbose):
                     if self.path == result_path:
                         if not os.path.exists(self.path):
                             self.send_error(404)
+                            self.end_headers()
                         else:
                             self.send_response(200)
+                            self.end_headers()
+
                             with open(self.path, 'rb') as file:
                                 self.wfile.write(file.read())
                     # Determine if this is a request for a file within the
@@ -585,10 +588,9 @@ def view(result_path, port, verbose):
                         if not os.path.exists(file_path) or \
                                 not file_path.startswith(extracted_path):
                             self.send_error(404)
+                            self.end_headers()
                         else:
                             self.send_response(200)
-                            self.send_header('Access-Control-Allow-Origin',
-                                             '*')
                             self.end_headers()
 
                             with open(file_path, 'rb') as file:
@@ -648,7 +650,7 @@ def view(result_path, port, verbose):
     url = f'http://localhost:{port}?file={result_path}&session={session}'
     launch_status = click.launch(url)
     click.echo('Your view should open in your default browser shortly. You '
-               f'may open it manually at the URL: {url}')
+               f'may open it manually at the URL:\n\n{url}\n')
 
     # Yell if there was an error
     if launch_status != 0:
