@@ -32,8 +32,8 @@ def _echo_plugins():
         for name, plugin in sorted(plugins.items()):
             click.echo('%s: %s' % (name, plugin['version']))
     else:
-        click.secho('No plugins are currently installed.\nYou can browse '
-                    'the official QIIME 2 plugins at https://qiime2.org')
+        click.secho('No plugins are currently installed.\n'
+                    'Find plugins at https://library.qiime2.org.')
 
 
 @click.command(help='Display information about current deployment.',
@@ -81,7 +81,8 @@ def info(config_level):
             click.secho(f'\n{config}')
 
     click.secho('\nGetting help', fg='green')
-    click.secho('To get help with QIIME 2, visit https://qiime2.org')
+    click.secho('To find help and learning resources, visit '
+                'https://qiime2.org.')
 
     if config_level:
         click.secho('To get help with configuring and/or understanding '
