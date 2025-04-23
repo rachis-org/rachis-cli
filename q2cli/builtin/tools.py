@@ -650,7 +650,7 @@ def view(result_path, port, verbose):
     url = f'http://localhost:{port}?file={result_path}&session={session}'
     launch_status = click.launch(url)
     click.echo('Your view should open in your default browser shortly. You '
-               f'may open it manually at the URL: {url}')
+               f'may open it manually at the URL:\n\n{url}\n')
 
     # Yell if there was an error
     if launch_status != 0:
