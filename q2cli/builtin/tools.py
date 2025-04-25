@@ -1517,3 +1517,41 @@ def annotation_fetch(input_path, name, verbose):
         click.echo('', nl=True)
         click.echo(CONFIG.cfg_style('type', "contents")+":  ", nl=False)
         click.echo(annotation.contents)
+
+
+@tools.command(
+    name='annotation-list',
+    short_help='List Annotations on a QIIME 2 Result.',
+    help='List all Annotations that are attached to'
+         ' an Artifact or Visualization.'
+)
+@click.option(
+    '--input-path',
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help='The `.qza` or `.qzv` to list Annotations from.'
+)
+def annotation_list(input_path):
+    """
+    Load a Result, retrieve all Annotations
+    and display their ids, names & types.
+    """
+    import qiime2.sdk
+    from q2cli.core.config import CONFIG
+
+    result = qiime2.sdk.Result.load(input_path)
+
+    try:
+        annotations = result.iter_annotations()
+    except Exception as e:
+        click.echo(CONFIG.cfg_style('error', str(e)), err=True)
+        raise click.Abort()
+
+    for annotation in annotations:
+        click.echo(CONFIG.cfg_style('type', "ID")+":        ", nl=False)
+        click.echo(annotation.id)
+        click.echo(CONFIG.cfg_style('type', "name")+":      ", nl=False)
+        click.echo(annotation.name)
+        click.echo(CONFIG.cfg_style('type', "type")+":      ", nl=False)
+        click.echo(annotation.annotation_type)
+        click.echo('', nl=True)
