@@ -1277,6 +1277,44 @@ class TestReplay(unittest.TestCase):
 
             self.assertEqual(os.listdir(unzipped_path), ['supplement'])
 
+    # TODO: this is a super minimal test just to confirm these commands all
+    # run without failing. After 2025.4 release, I will add a more complete
+    # test suite to assert that the outputs of each of these commands are
+    # what we expect them to be
+    def test_annotation_commands_roundtrip(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            in_fp = os.path.join(self.tempdir, 'concated_ints.qza')
+            out_fp = os.path.join(tempdir, 'concated_ints_roundtrip.qza')
+
+            create_result = self.runner.invoke(
+                tools,
+                ['annotation-create', '--input-path', in_fp,
+                 '--annotation-type', 'Note',
+                 '--name', 'mynote', '--text', 'my special text',
+                 '--output-path', out_fp]
+            )
+            self.assertEqual(create_result.exit_code, 0)
+
+            fetch_result = self.runner.invoke(
+                tools,
+                ['annotation-fetch', '--input-path', out_fp,
+                 '--name', 'mynote']
+            )
+            self.assertEqual(fetch_result.exit_code, 0)
+
+            list_result = self.runner.invoke(
+                tools,
+                ['annotation-list', '--input-path', out_fp]
+            )
+            self.assertEqual(list_result.exit_code, 0)
+
+            remove_result = self.runner.invoke(
+                tools,
+                ['annotation-remove', '--input-path', out_fp,
+                 '--name', 'mynote', '--output-path', out_fp]
+            )
+            self.assertEqual(remove_result.exit_code, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
