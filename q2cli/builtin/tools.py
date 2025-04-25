@@ -1394,9 +1394,7 @@ def annotation_create(input_path, annotation_type,
     import qiime2.sdk
     from qiime2.core.annotate import Note
     from q2cli.core.config import CONFIG
-    from q2cli.util import get_plugin_manager
 
-    get_plugin_manager()
     # enforce exactly one of `--text` or `--file`
     if (text is None) == (filepath is None):
         raise click.UsageError('Exactly one of `--text` or `--file`'
@@ -1454,9 +1452,6 @@ def annotation_remove(input_path, name, output_path):
     """Load a Result, remove an Annotation by name and save."""
     import qiime2.sdk
     from q2cli.core.config import CONFIG
-    from q2cli.util import get_plugin_manager
-
-    get_plugin_manager()
 
     result = qiime2.sdk.Result.load(input_path)
 
@@ -1473,3 +1468,52 @@ def annotation_remove(input_path, name, output_path):
         CONFIG.cfg_style('success',
                          f'Removed annotation "{name}" from {out_fp}')
     )
+
+
+@tools.command(
+    name='annotation-fetch',
+    short_help='Fetch an Annotation from a QIIME 2 Result.',
+    help='Fetch an existing Annotation (by name) from'
+         ' an Artifact or Visualization.'
+)
+@click.option(
+    '--input-path',
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help='The `.qza` or `.qzv` to fetch the Annotation from.'
+)
+@click.option(
+    '--name',
+    required=True,
+    help='The name of the Annotation to fetch.'
+)
+@click.option(
+    '--verbose/--no-verbose',
+    default=False,
+    help='Whether to display the contents of the Annotation.'
+)
+def annotation_fetch(input_path, name, verbose):
+    """
+    Load a Result, retrieve an Annotation by name and display the contents.
+    """
+    import qiime2.sdk
+    from q2cli.core.config import CONFIG
+
+    result = qiime2.sdk.Result.load(input_path)
+
+    try:
+        annotation = result.get_annotation(name)
+    except Exception as e:
+        click.echo(CONFIG.cfg_style('error', str(e)), err=True)
+        raise click.Abort()
+
+    click.echo(CONFIG.cfg_style('type', "ID")+":        ", nl=False)
+    click.echo(annotation.id)
+    click.echo(CONFIG.cfg_style('type', "name")+":      ", nl=False)
+    click.echo(annotation.name)
+    click.echo(CONFIG.cfg_style('type', "type")+":      ", nl=False)
+    click.echo(annotation.annotation_type)
+    if verbose:
+        click.echo('', nl=True)
+        click.echo(CONFIG.cfg_style('type', "contents")+":  ", nl=False)
+        click.echo(annotation.contents)
