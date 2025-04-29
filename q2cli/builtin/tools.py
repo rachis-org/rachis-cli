@@ -573,11 +573,7 @@ def view(result_path, port, verbose):
                             self.send_error(404)
                             self.end_headers()
                         else:
-                            self.send_response(200)
-                            self.end_headers()
-
-                            with open(self.path, 'rb') as file:
-                                self.wfile.write(file.read())
+                            self._handle_file_exists(self.path)
                     # Determine if this is a request for a file within the
                     # visualization
                     elif self.path.startswith(f'/_/{session}/{result.uuid}/'):
@@ -590,17 +586,28 @@ def view(result_path, port, verbose):
                             self.send_error(404)
                             self.end_headers()
                         else:
-                            self.send_response(200)
-                            self.end_headers()
-
-                            with open(file_path, 'rb') as file:
-                                self.wfile.write(file.read())
+                            self._handle_file_exists(file_path)
                     # Otherwise default to super class. This will respond
                     # appropriately to requests for assets that are part of the
                     # vendored view app and will reject any requests for files
                     # outside the served directory
                     else:
                         super().do_GET()
+
+        def _handle_file_exists(self, file_path):
+            type_, _ = mimetypes.guess_type(self.path, strict=False)
+            if type_ is None:
+                type_ = 'application/octet-stream'
+
+            file_size = os.path.getsize(file_path)
+
+            self.send_response(200)
+            self.send_header('content-type', type_)
+            self.send_header('content-length', file_size)
+            self.end_headers()
+
+            with open(file_path, 'rb') as file:
+                self.wfile.write(file.read())
 
     # Get the path to the packaged vendored view
     # TODO: This won't work if we start packaging QIIME 2 as a wheel, we will
@@ -615,6 +622,7 @@ def view(result_path, port, verbose):
 
     # Set up the server socket
     import socket
+    import mimetypes
 
     server_socket = socket.socket()
     # If port is None then slap a 0 into here to get a free port
