@@ -14,8 +14,10 @@ class OutOfDisk(Exception):
 def get_app_dir():
     import os
     conda_prefix = os.environ.get('CONDA_PREFIX')
-    if conda_prefix is not None and os.access(conda_prefix, os.W_OK | os.X_OK):
-        return os.path.join(conda_prefix, 'var', 'q2cli')
+    environment_cache = os.path.join(conda_prefix, 'var', 'q2cli')
+    if conda_prefix is not None and (os.access(conda_prefix, os.W_OK | os.X_OK)
+                                     or os.path.exists(environment_cache)):
+        return environment_cache
     else:
         import click
         return click.get_app_dir('q2cli', roaming=False)
