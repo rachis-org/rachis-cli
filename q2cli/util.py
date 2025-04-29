@@ -17,7 +17,7 @@ def get_app_dir():
     environment_cache = os.path.join(conda_prefix, 'var', 'q2cli')
     if conda_prefix is not None and (os.access(conda_prefix, os.W_OK | os.X_OK) 
                                      or os.exists(environment_cache)):
-        return envioronment_cache
+        return environment_cache
     else:
         import click
         return click.get_app_dir('q2cli', roaming=False)
