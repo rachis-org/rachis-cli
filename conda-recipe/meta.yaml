@@ -16,7 +16,7 @@ requirements:
   run:
   - python  {{ python }}
   - setuptools
-  - click >=8.1
+  - click {{ click }}
   - qiime2 >={{ qiime2 }}
   build:
   - python {{ python }}
