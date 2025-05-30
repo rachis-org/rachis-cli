@@ -51,4 +51,4 @@ complete -F _qiime_completion -o default -o bashdefault qiime
 # Ignore stdout to avoid displaying help text to users enabling tab-completion.
 # stderr displays the note about cache refreshing, as that can take a few
 # moments to complete.
-qiime > /dev/null
+qiime &> /dev/null
