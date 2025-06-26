@@ -34,6 +34,33 @@ def refresh_cache():
     q2cli.core.cache.CACHE.refresh()
 
 
+@dev.command(name='test-deployment',
+             short_help='Test deployed QIIME 2 packages and plugins.',
+             help="Run the discoverable unit tests for all currently "
+                  "deployed QIIME 2 packages and plugins.",
+             cls=ToolCommand)
+def test_deployment():
+    # TODO: Allow user to pass specific targets on the cli (this would 
+    # override internal determination of targets).
+    # TODO: Allow user to specify targets to skip on the cli (this would
+    # subtract from internally determined targets).
+    # TODO: Allow user to list the targets but not run the tests.
+    import pytest
+    import q2cli.util
+    
+    targets = {'qiime2', 'q2cli', 'q2templates'}
+    pm = q2cli.util.get_plugin_manager()
+    for plugin in pm.plugins.values():
+        targets.add(plugin.project_name)
+    # for target in targets:
+    #     click.echo(target)
+
+    for target in targets:
+        click.echo(f"Testing target: {target}")
+        pytest.main(['--pyargs', target])
+    
+
+
 import_theme_help = \
     ("Allows for customization of q2cli's command line styling based on an "
      "imported .theme (INI formatted) file. If you are unfamiliar with .ini "
