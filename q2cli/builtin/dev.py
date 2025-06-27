@@ -36,8 +36,9 @@ def refresh_cache():
 
 @dev.command(name='test-deployment',
              short_help='Test deployed QIIME 2 packages and plugins.',
-             help="Run the discoverable unit tests for all currently "
-                  "deployed QIIME 2 packages and plugins.",
+             help="Run the discoverable for all currently deployed "
+                  "QIIME 2 packages and plugins. Tests are discovered "
+                  "using `python -m unittest discover`.",
              cls=ToolCommand)
 def test_deployment():
     # TODO: Allow user to pass specific targets on the cli (this would 
@@ -45,21 +46,54 @@ def test_deployment():
     # TODO: Allow user to specify targets to skip on the cli (this would
     # subtract from internally determined targets).
     # TODO: Allow user to list the targets but not run the tests.
-    import pytest
+    import subprocess
     import q2cli.util
-    
+    import os
+    from itertools import cycle
+
+    os.environ['QIIMETEST'] = '1'
+
     targets = {'qiime2', 'q2cli', 'q2templates'}
     pm = q2cli.util.get_plugin_manager()
     for plugin in pm.plugins.values():
-        targets.add(plugin.project_name)
-    # for target in targets:
-    #     click.echo(target)
+        targets.add(plugin.package)
+    targets = sorted(targets)
 
+    results = [] 
     for target in targets:
-        click.echo(f"Testing target: {target}")
-        pytest.main(['--pyargs', target])
-    
+        click.secho(f"Testing target: {target}", fg='green')
+        result = subprocess.run([
+            'python', '-m', 'unittest', 'discover',
+            '-s', target,
+            '-v'  # verbose
+        ], env=os.environ.copy())
+        status = "PASS" if result.returncode == 0 else "FAIL"
+        results.append({
+            'package': target,
+            'status': status,
+            'exit_code': result.returncode,
+            'stderr': result.stderr
+        })
 
+    # Display a report
+    click.echo("\n" + "="*60)
+    click.echo("TEST RESULTS SUMMARY")
+    click.echo("="*60)
+    click.echo(f"{'Package':<50} {'Status':<10} {'Exit Code':<10}")
+    click.echo("-" * 60)
+    
+    colors = cycle([None, 'bright_black'])
+    for result, color in zip(results, colors):
+        click.secho(f"{result['package']:<50} "
+                    f"{result['status']:<10} "
+                    f"{result['exit_code']:<10}", bg=color)
+    
+    passed = sum(1 for r in results if r['status'] == 'PASS')
+    failed = len(results) - passed
+    click.echo("-" * 60)
+    click.echo(f"Total: {len(results)}, Passed: {passed}, Failed: {failed}")
+    
+    return 1 if failed > 0 else 0
 
 import_theme_help = \
     ("Allows for customization of q2cli's command line styling based on an "
