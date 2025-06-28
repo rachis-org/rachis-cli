@@ -36,18 +36,19 @@ def refresh_cache():
 
 @dev.command(name="test-deployment",
              short_help="Test deployed QIIME 2 packages and plugins.",
-             help="Run the discoverable for all currently deployed "
+             help="Run the discoverable tests for all currently deployed "
                   "QIIME 2 packages and plugins. Tests are discovered "
-                  "using `python -m unittest discover`. The command is "
-                  "experimental and its interface is subject to change.",
+                  "using `python -m unittest discover`. WARNING: This "
+                  "command is experimental and its interface is subject to "
+                  "change.",
              cls=ToolCommand)
 @click.option("--skip", multiple=True,
               help="Package names to skip during testing. "
                    "Can be specified multiple times.")
-def test_deployment(skip):
-    # TODO: Allow user to pass specific targets on the cli (this would
-    # override internal determination of targets).
-    # TODO: Allow user to list the targets but not run the tests.
+@click.option("--dry-run", is_flag=True, default=False,
+              help="List packages that would be tested but don't run the "
+                   "tests.")
+def test_deployment(skip, dry_run):
     import subprocess
     import q2cli.util
     import os
@@ -78,7 +79,15 @@ def test_deployment(skip):
     # collect the non-plugin packages to test
     nonplugin_targets = {'qiime2', 'q2cli', 'q2templates'} - skip
 
-    # run the plugin tests - QIIMETEST environment variable should not
+    # Handle dry run
+    if dry_run:
+        targets = plugin_targets | nonplugin_targets
+        click.echo(f"Would test {len(targets)} targets:")
+        for target in sorted(targets):
+            click.echo(f"  - {target}")
+        return 0
+
+    # run the plugin tests - QIIMETEST environment variable should not be set
     results = _run_tests(plugin_targets, env)
 
     # run nonplugin tests with the QIIMETEST environment variable set
@@ -86,22 +95,21 @@ def test_deployment(skip):
     results.extend(_run_tests(nonplugin_targets, env))
 
     # Report a summary of the results
-    click.echo("\n" + "="*80)
+    click.echo("\n" + "="*60)
     click.echo("TEST RESULTS SUMMARY")
-    click.echo("="*80)
-    click.echo(f"{'Package':<50} {'Status':<10} {'Exit Code':<10}")
-    click.echo("-" * 80)
+    click.echo("="*60)
+    click.echo(f"{'Package':<50} {'Status':<10}")
+    click.echo("-" * 60)
 
     for i, result in enumerate(results):
         # alternate bolding and not bolding to make table easier to read
         bold = i % 2 == 0
         click.secho(f"{result['package']:<50} "
-                    f"{result['status']:<10} "
-                    f"{result['exit_code']:<10}", bold=bold)
+                    f"{result['status']:<10} ", bold=bold)
 
     passed = sum(1 for r in results if r['status'] == 'PASS')
     failed = len(results) - passed
-    click.echo("-" * 80)
+    click.echo("-" * 60)
     click.echo(f"Total: {len(results)}, Passed: {passed}, Failed: {failed}")
 
     return 1 if failed > 0 else 0

@@ -83,9 +83,14 @@ class TestDev(unittest.TestCase):
         # confirm that the command exists and is callable
         result = self.runner.invoke(dev,
                                     ['test-deployment',
-                                     '--help',
+                                     '--dry-run',
                                      ])
+        expected_regex1 = r'Would test \d+ targets:'
+        expected_regex2 = r'q2cli'
+
         self.assertEqual(result.exit_code, 0)
+        self.assertRegex(result.stdout, expected_regex1)
+        self.assertRegex(result.stdout, expected_regex2)
 
     # result_type & result_data tests
     def test_assert_result_type_artifact_success(self):
