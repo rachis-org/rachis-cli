@@ -78,6 +78,15 @@ class TestDev(unittest.TestCase):
             dev, ['reset-theme'])
         self.assertNotEqual(result.exit_code, 0)
 
+    # test-deployment
+    def test_test_deployment(self):
+        # confirm that the command exists and is callable
+        result = self.runner.invoke(dev,
+                                    ['test-deployment',
+                                     '--help',
+                                     ])
+        self.assertEqual(result.exit_code, 0)
+
     # result_type & result_data tests
     def test_assert_result_type_artifact_success(self):
         result = self.runner.invoke(dev,
