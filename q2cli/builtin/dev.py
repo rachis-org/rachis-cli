@@ -41,17 +41,16 @@ def refresh_cache():
                   "using `python -m unittest discover`. The command is "
                   "experimental and its interface is subject to change.",
              cls=ToolCommand)
-@click.option("--skip", multiple=True, 
+@click.option("--skip", multiple=True,
               help="Package names to skip during testing. "
                    "Can be specified multiple times.")
 def test_deployment(skip):
-    # TODO: Allow user to pass specific targets on the cli (this would 
+    # TODO: Allow user to pass specific targets on the cli (this would
     # override internal determination of targets).
     # TODO: Allow user to list the targets but not run the tests.
     import subprocess
     import q2cli.util
     import os
-    from itertools import cycle
 
     env = os.environ.copy()
 
@@ -72,19 +71,19 @@ def test_deployment(skip):
             })
         return results
 
-    # collect the plugins to test 
+    # collect the plugins to test
     pm = q2cli.util.get_plugin_manager()
-    plugin_targets = {plugin.package for plugin in pm.plugins.values()}  - skip
+    plugin_targets = {plugin.package for plugin in pm.plugins.values()} - skip
 
     # collect the non-plugin packages to test
     nonplugin_targets = {'qiime2', 'q2cli', 'q2templates'} - skip
-    
+
     # run the plugin tests - QIIMETEST environment variable should not
     results = _run_tests(plugin_targets, env)
 
     # run nonplugin tests with the QIIMETEST environment variable set
     env['QIIMETEST'] = '1'
-    results.extend(_run_tests(nonplugin_targets,env))
+    results.extend(_run_tests(nonplugin_targets, env))
 
     # Report a summary of the results
     click.echo("\n" + "="*80)
@@ -92,19 +91,19 @@ def test_deployment(skip):
     click.echo("="*80)
     click.echo(f"{'Package':<50} {'Status':<10} {'Exit Code':<10}")
     click.echo("-" * 80)
-    
+
     for i, result in enumerate(results):
         # alternate bolding and not bolding to make table easier to read
         bold = i % 2 == 0
         click.secho(f"{result['package']:<50} "
                     f"{result['status']:<10} "
                     f"{result['exit_code']:<10}", bold=bold)
-    
+
     passed = sum(1 for r in results if r['status'] == 'PASS')
     failed = len(results) - passed
     click.echo("-" * 80)
     click.echo(f"Total: {len(results)}, Passed: {passed}, Failed: {failed}")
-    
+
     return 1 if failed > 0 else 0
 
 
