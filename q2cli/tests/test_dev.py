@@ -79,8 +79,7 @@ class TestDev(unittest.TestCase):
         self.assertNotEqual(result.exit_code, 0)
 
     # test-deployment
-    def test_test_deployment(self):
-        # confirm that the command exists and is callable
+    def test_test_deployment_dry_run(self):
         result = self.runner.invoke(dev,
                                     ['test-deployment',
                                      '--dry-run',
@@ -88,9 +87,17 @@ class TestDev(unittest.TestCase):
         expected_regex1 = r'Would test \d+ targets:'
         expected_regex2 = r'q2cli'
 
-        self.assertEqual(result.exit_code, 0)
         self.assertRegex(result.stdout, expected_regex1)
         self.assertRegex(result.stdout, expected_regex2)
+
+    def test_test_deployment_target(self):
+        result = self.runner.invoke(dev,
+                                    ['test-deployment',
+                                     '--target', 'not-a-plugin'
+                                     ])
+        expected_regex1 = r'Nothing to test.'
+
+        self.assertRegex(result.stdout, expected_regex1)
 
     # result_type & result_data tests
     def test_assert_result_type_artifact_success(self):

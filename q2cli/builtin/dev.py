@@ -39,33 +39,38 @@ def refresh_cache():
              help="Run the discoverable tests for all currently deployed "
                   "QIIME 2 packages and plugins. Tests are discovered "
                   "using `python -m unittest discover`. WARNING: This "
-                  "command is experimental and its interface is subject to "
-                  "change.",
+                  "command is experimental: its interface is subject to "
+                  "change, and some tests may fail on some systems due to "
+                  "configuration issues.",
              cls=ToolCommand)
 @click.option("--skip", multiple=True,
-              help="Package names to skip during testing. "
+              help="Package to skip during testing. This is ignored if "
+                   "--target is provided. Can be specified multiple times.")
+@click.option("--target", multiple=True,
+              help="Package to test. Defaults to all discovered packages. "
                    "Can be specified multiple times.")
 @click.option("--dry-run", is_flag=True, default=False,
               help="List packages that would be tested but don't run the "
                    "tests.")
-def test_deployment(skip, dry_run):
+def test_deployment(skip, target, dry_run):
     import subprocess
     import q2cli.util
     import os
 
     env = os.environ.copy()
 
-    skip = set(target.replace('-', '_') for target in skip)
+    skip = set(s.replace('-', '_') for s in skip)
+    target = set(t.replace('-', '_') for t in target)
 
     def _run_tests(targets, env):
         results = []
-        for target in sorted(targets):
-            click.secho(f"Testing target: {target}", fg='green')
-            cmd = ['python', '-m', 'unittest', 'discover', '-s', target]
+        for t in sorted(targets):
+            click.secho(f"Testing target: {t}", fg='green')
+            cmd = ['python', '-m', 'unittest', 'discover', '-s', t]
             result = subprocess.run(cmd, env=env)
             status = "PASS" if result.returncode == 0 else "FAIL"
             results.append({
-                'package': target,
+                'package': t,
                 'status': status,
                 'exit_code': result.returncode,
                 'stderr': result.stderr
@@ -74,18 +79,30 @@ def test_deployment(skip, dry_run):
 
     # collect the plugins to test
     pm = q2cli.util.get_plugin_manager()
-    plugin_targets = {plugin.package for plugin in pm.plugins.values()} - skip
+    plugin_targets = {plugin.package for plugin in pm.plugins.values()}
 
     # collect the non-plugin packages to test
-    nonplugin_targets = {'qiime2', 'q2cli', 'q2templates'} - skip
+    nonplugin_targets = {'qiime2', 'q2cli', 'q2templates'}
+
+    # handle target or skip parameter
+    if len(target) > 0:
+        plugin_targets = plugin_targets & target
+        nonplugin_targets = nonplugin_targets & target
+    else:
+        plugin_targets = plugin_targets - skip
+        nonplugin_targets = nonplugin_targets - skip
+
+    if len(plugin_targets) + len(nonplugin_targets) == 0:
+        click.echo("No targets found. Nothing to test.")
+        return
 
     # Handle dry run
     if dry_run:
         targets = plugin_targets | nonplugin_targets
         click.echo(f"Would test {len(targets)} targets:")
-        for target in sorted(targets):
-            click.echo(f"  - {target}")
-        return 0
+        for t in sorted(targets):
+            click.echo(f"  - {t}")
+        return
 
     # run the plugin tests - QIIMETEST environment variable should not be set
     results = _run_tests(plugin_targets, env)
@@ -112,7 +129,7 @@ def test_deployment(skip, dry_run):
     click.echo("-" * 60)
     click.echo(f"Total: {len(results)}, Passed: {passed}, Failed: {failed}")
 
-    return 1 if failed > 0 else 0
+    return
 
 
 import_theme_help = \
