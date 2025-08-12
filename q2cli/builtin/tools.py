@@ -43,11 +43,26 @@ def tools():
               help='Format which the data should be exported as. '
               'This option cannot be used with Visualizations')
 def export_data(input_path, output_path, output_format):
-    import qiime2.util
     import qiime2.sdk
-    import distutils
     from q2cli.core.config import CONFIG
+
     result = qiime2.sdk.Result.load(input_path)
+
+    output_format = _export(result, output_format, output_path)
+
+    output_type = 'file' if os.path.isfile(output_path) else 'directory'
+    success = 'Exported %s as %s to %s %s' % (input_path, output_format,
+                                              output_type, output_path)
+    click.echo(CONFIG.cfg_style('success', success))
+
+
+def _export(result, output_format, output_path):
+    import distutils
+
+    import qiime2.sdk
+    import qiime2.util
+    from q2cli.core.config import CONFIG
+
     if output_format is None:
         if isinstance(result, qiime2.sdk.Artifact):
             output_format = result.format.__name__
@@ -75,10 +90,7 @@ def export_data(input_path, output_path, output_format):
             else:
                 distutils.dir_util.copy_tree(str(source), output_path)
 
-    output_type = 'file' if os.path.isfile(output_path) else 'directory'
-    success = 'Exported %s as %s to %s %s' % (input_path, output_format,
-                                              output_type, output_path)
-    click.echo(CONFIG.cfg_style('success', success))
+    return output_format
 
 
 def _print_descriptions(descriptions, tsv):
@@ -968,6 +980,47 @@ def cache_import(type, input_path, cache, key, input_format, validate_level):
                                               input_format,
                                               cache,
                                               key)
+    click.echo(CONFIG.cfg_style('success', success))
+
+
+@tools.command(name='cache-export',
+               short_help='Export data from a QIIME 2 Artifact '
+               'or a Visualization in a given cache under a given key.',
+               help='Exporting extracts (and optionally transforms) data '
+               'stored inside an Artifact or Visualization. Note that '
+               'Visualizations cannot be transformed with --output-format',
+               cls=ToolCommand)
+@click.option('--cache', required=True,
+              type=click.Path(exists=True, file_okay=False, dir_okay=True,
+                              readable=True),
+              help='Path to an existing cache to export from.')
+@click.option('--key', required=True,
+              help='The key of the Artifact or Visualization to export from '
+              'the cache.')
+@click.option('--output-path', required=True,
+              type=click.Path(exists=False, file_okay=True, dir_okay=True,
+                              writable=True),
+              help='Path to file or directory data should be exported to.')
+@click.option('--output-format', required=False,
+              help='Format which the data should be exported as. '
+              'This option cannot be used with Visualizations')
+def export_cache(cache, key, output_path, output_format):
+    from qiime2 import Cache
+    from q2cli.core.config import CONFIG
+
+    try:
+        cache = Cache(cache)
+        result = cache.load(key)
+
+        output_format = _export(result, output_format, output_path)
+    except Exception as e:
+        header = "There was a problem exporting the Artifact/Visualization " \
+                 f"with the key '{key}' from the cache '{cache}'."
+        q2cli.util.exit_with_error(e, header=header, traceback=None)
+
+    output_type = 'file' if os.path.isfile(output_path) else 'directory'
+    success = f"Exported {cache}:{key} as {output_format} to {output_type} "\
+              f"{output_path}"
     click.echo(CONFIG.cfg_style('success', success))
 
 
