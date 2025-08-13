@@ -17,6 +17,24 @@ from q2cli.click.command import ToolCommand, ToolGroupCommand
 _COMBO_METAVAR = 'ARTIFACT/VISUALIZATION'
 
 
+def _import(type, input_path, input_format, validate_level):
+    import qiime2.sdk
+    import qiime2.plugin
+
+    try:
+        artifact = qiime2.sdk.Artifact.import_data(
+            type, input_path, view_type=input_format,
+            validate_level=validate_level)
+    except qiime2.plugin.ValidationError as e:
+        header = 'There was a problem importing %s:' % input_path
+        q2cli.util.exit_with_error(e, header=header, traceback=None)
+    except Exception as e:
+        header = 'An unexpected error has occurred:'
+        q2cli.util.exit_with_error(e, header=header)
+
+    return artifact
+
+
 def _export(result, output_format, output_path):
     import distutils
 
@@ -1022,24 +1040,6 @@ def export_cache(cache, key, output_path, output_format):
     success = f"Exported {cache}:{key} as {output_format} to {output_type} "\
               f"{output_path}"
     click.echo(CONFIG.cfg_style('success', success))
-
-
-def _import(type, input_path, input_format, validate_level):
-    import qiime2.sdk
-    import qiime2.plugin
-
-    try:
-        artifact = qiime2.sdk.Artifact.import_data(
-            type, input_path, view_type=input_format,
-            validate_level=validate_level)
-    except qiime2.plugin.ValidationError as e:
-        header = 'There was a problem importing %s:' % input_path
-        q2cli.util.exit_with_error(e, header=header, traceback=None)
-    except Exception as e:
-        header = 'An unexpected error has occurred:'
-        q2cli.util.exit_with_error(e, header=header)
-
-    return artifact
 
 
 @tools.command(name='cache-fetch',
