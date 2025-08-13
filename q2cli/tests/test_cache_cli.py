@@ -1026,7 +1026,7 @@ class TestCacheCli(unittest.TestCase):
             alias_uuid = load_action_yaml(
                 result._archiver.path)['action']['alias-of']
             execution_contexts.append(load_action_yaml(
-                self.cache.data / alias_uuid)
+                result._archiver.path, nested=alias_uuid)
                 ['execution']['execution_context'])
 
         return execution_contexts
