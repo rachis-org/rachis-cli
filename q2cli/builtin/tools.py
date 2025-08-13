@@ -1027,8 +1027,8 @@ def export_cache(cache, key, output_path, output_format):
     from q2cli.core.config import CONFIG
 
     try:
-        cache = Cache(cache)
-        result = cache.load(key)
+        _cache = Cache(cache)
+        result = _cache.load(key)
 
         output_format = _export(result, output_format, output_path)
     except Exception as e:
