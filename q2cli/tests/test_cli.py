@@ -42,30 +42,7 @@ max_threads = 1"""
 
 # This is formatted this way to ensure the trailing spaces tomlkit.dumps throws
 # at the end of a bunch of lines for no apparent reason are preserved here
-CONFIG_LEVEL_3 = "{'parsl': Config(" +\
-                 "\n    app_cache=True, " +\
-                 "\n    checkpoint_files=None, " +\
-                 "\n    checkpoint_mode=None, " +\
-                 "\n    checkpoint_period=None, " +\
-                 "\n    executors=(ThreadPoolExecutor(" +\
-                 "\n        label='default', " +\
-                 "\n        max_threads=1, " +\
-                 "\n        storage_access=None, " +\
-                 "\n        thread_name_prefix='', " +\
-                 "\n        working_dir=None" +\
-                 "\n    ), _TEST_EXECUTOR_()), " +\
-                 "\n    garbage_collect=True, " +\
-                 "\n    initialize_logging=True, " +\
-                 "\n    internal_tasks_max_threads=10, " +\
-                 "\n    max_idletime=120.0, " +\
-                 "\n    monitoring=None, " +\
-                 "\n    retries=0, " +\
-                 "\n    retry_handler=None, " +\
-                 "\n    run_dir='runinfo', " +\
-                 "\n    strategy='none', " +\
-                 "\n    strategy_period=5, " +\
-                 "\n    usage_tracking=False" +\
-                 "\n)}"
+CONFIG_LEVEL_3 = "{'parsl': Config("
 
 EXPECTED_CITATIONS = """% use `qiime tools citations` on a QIIME 2 result for complete list
 
