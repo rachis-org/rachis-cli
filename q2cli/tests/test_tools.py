@@ -1277,43 +1277,242 @@ class TestReplay(unittest.TestCase):
 
             self.assertEqual(os.listdir(unzipped_path), ['supplement'])
 
-    # TODO: this is a super minimal test just to confirm these commands all
-    # run without failing. After 2025.4 release, I will add a more complete
-    # test suite to assert that the outputs of each of these commands are
-    # what we expect them to be
+
+class TestAnnotations(unittest.TestCase):
+    def setUp(self):
+        get_dummy_plugin()
+        self.runner = CliRunner()
+        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+
+        self.art1 = os.path.join(self.tempdir, 'ints1.qza')
+        Artifact.import_data('IntSequence1', [0, 1, 2]).save(self.art1)
+        self.output1 = os.path.join(self.tempdir, 'ints1_annotated.qza')
+
+        self.note_file = os.path.join(
+                self.tempdir, 'note_file.txt')
+
+        with open(self.note_file, 'w') as f:
+            f.write('my special text')
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
     def test_annotation_commands_roundtrip(self):
-        with tempfile.TemporaryDirectory() as tempdir:
-            in_fp = os.path.join(self.tempdir, 'concated_ints.qza')
-            out_fp = os.path.join(tempdir, 'concated_ints_roundtrip.qza')
+        create_result = self.runner.invoke(
+            tools,
+            ['annotation-create', '--input-path', self.art1,
+                '--annotation-type', 'Note',
+                '--name', 'mynote', '--text', 'my special text',
+                '--output-path', self.output1]
+        )
+        self.assertEqual(create_result.exit_code, 0)
 
-            create_result = self.runner.invoke(
-                tools,
-                ['annotation-create', '--input-path', in_fp,
-                 '--annotation-type', 'Note',
-                 '--name', 'mynote', '--text', 'my special text',
-                 '--output-path', out_fp]
-            )
-            self.assertEqual(create_result.exit_code, 0)
+        fetch_result = self.runner.invoke(
+            tools,
+            ['annotation-fetch', '--input-path', self.output1,
+                '--name', 'mynote']
+        )
+        self.assertEqual(fetch_result.exit_code, 0)
 
-            fetch_result = self.runner.invoke(
-                tools,
-                ['annotation-fetch', '--input-path', out_fp,
-                 '--name', 'mynote']
-            )
-            self.assertEqual(fetch_result.exit_code, 0)
+        list_result = self.runner.invoke(
+            tools,
+            ['annotation-list', '--input-path', self.output1]
+        )
+        self.assertEqual(list_result.exit_code, 0)
 
-            list_result = self.runner.invoke(
-                tools,
-                ['annotation-list', '--input-path', out_fp]
-            )
-            self.assertEqual(list_result.exit_code, 0)
+        remove_result = self.runner.invoke(
+            tools,
+            ['annotation-remove', '--input-path', self.output1,
+                '--name', 'mynote', '--output-path', self.output1]
+        )
+        self.assertEqual(remove_result.exit_code, 0)
 
-            remove_result = self.runner.invoke(
-                tools,
-                ['annotation-remove', '--input-path', out_fp,
-                 '--name', 'mynote', '--output-path', out_fp]
-            )
-            self.assertEqual(remove_result.exit_code, 0)
+    def test_annotation_create_with_text(self):
+        create_result = self.runner.invoke(
+            tools,
+            ['annotation-create', '--input-path', self.art1,
+             '--annotation-type', 'Note',
+             '--name', 'mynote', '--text', 'my special text',
+             '--output-path', self.output1]
+        )
+        # confirm the command doesn't produce an error
+        self.assertEqual(create_result.exit_code, 0)
+
+        output_uuid = Result.load(self.output1).uuid
+        # this will just produce one annotation
+        for annotation in Result.load(self.output1).iter_annotations():
+            annotation_uuid = annotation.id
+
+        exp_namelist = {
+            f'{output_uuid}/checksums.sha512',
+            f'{output_uuid}/metadata.yaml',
+            f'{output_uuid}/VERSION',
+            f'{output_uuid}/annotations/{annotation_uuid}/checksums.sha512',
+            f'{output_uuid}/annotations/{annotation_uuid}/metadata.yaml',
+            f'{output_uuid}/annotations/{annotation_uuid}/note.txt',
+            f'{output_uuid}/provenance/metadata.yaml',
+            f'{output_uuid}/provenance/citations.bib',
+            f'{output_uuid}/provenance/VERSION',
+            f'{output_uuid}/provenance/conda-env.yaml',
+            f'{output_uuid}/provenance/action/action.yaml',
+            f'{output_uuid}/data/ints.txt'
+        }
+
+        exp_contents = 'my special text'
+
+        with zipfile.ZipFile(self.output1, 'r') as zfh:
+            # confirm file structure is what we expect
+            self.assertEqual(exp_namelist, set(zfh.namelist()))
+
+            annotation = zfh.read(
+                f'{output_uuid}/annotations/{annotation_uuid}/note.txt'
+            ).decode('utf-8')
+
+            # confirm the annotation file contains the text we expect
+            self.assertEqual(exp_contents, annotation)
+
+    # make sure we see same results as w/inline text for input
+    def test_annotation_create_with_file(self):
+        create_result = self.runner.invoke(
+            tools,
+            ['annotation-create', '--input-path', self.art1,
+             '--annotation-type', 'Note',
+             '--name', 'mynote', '--file', self.note_file,
+             '--output-path', self.output1]
+        )
+        # confirm the command doesn't produce an error
+        self.assertEqual(create_result.exit_code, 0)
+
+        output_uuid = Result.load(self.output1).uuid
+        # this will just produce one annotation
+        for annotation in Result.load(self.output1).iter_annotations():
+            annotation_uuid = annotation.id
+
+        exp_namelist = {
+            f'{output_uuid}/checksums.sha512',
+            f'{output_uuid}/metadata.yaml',
+            f'{output_uuid}/VERSION',
+            f'{output_uuid}/annotations/{annotation_uuid}/checksums.sha512',
+            f'{output_uuid}/annotations/{annotation_uuid}/metadata.yaml',
+            f'{output_uuid}/annotations/{annotation_uuid}/note.txt',
+            f'{output_uuid}/provenance/metadata.yaml',
+            f'{output_uuid}/provenance/citations.bib',
+            f'{output_uuid}/provenance/VERSION',
+            f'{output_uuid}/provenance/conda-env.yaml',
+            f'{output_uuid}/provenance/action/action.yaml',
+            f'{output_uuid}/data/ints.txt'
+        }
+
+        exp_contents = 'my special text'
+
+        with zipfile.ZipFile(self.output1, 'r') as zfh:
+            # confirm file structure is what we expect
+            self.assertEqual(exp_namelist, set(zfh.namelist()))
+
+            annotation = zfh.read(
+                f'{output_uuid}/annotations/{annotation_uuid}/note.txt'
+            ).decode('utf-8')
+
+            # confirm the annotation file contains the text we expect
+            self.assertEqual(exp_contents, annotation)
+
+    # make sure we don't run into any errors & see same result
+    # when overwriting the original artifact fp
+    def test_annotation_create_overwriting_input_file(self):
+        create_result = self.runner.invoke(
+            tools,
+            ['annotation-create', '--input-path', self.art1,
+             '--annotation-type', 'Note',
+             '--name', 'mynote', '--text', 'my special text',
+             '--output-path', self.art1]
+        )
+        # confirm the command doesn't produce an error
+        self.assertEqual(create_result.exit_code, 0)
+
+        output_uuid = Result.load(self.art1).uuid
+        # this will just produce one annotation
+        for annotation in Result.load(self.art1).iter_annotations():
+            annotation_uuid = annotation.id
+
+        exp_namelist = {
+            f'{output_uuid}/checksums.sha512',
+            f'{output_uuid}/metadata.yaml',
+            f'{output_uuid}/VERSION',
+            f'{output_uuid}/annotations/{annotation_uuid}/checksums.sha512',
+            f'{output_uuid}/annotations/{annotation_uuid}/metadata.yaml',
+            f'{output_uuid}/annotations/{annotation_uuid}/note.txt',
+            f'{output_uuid}/provenance/metadata.yaml',
+            f'{output_uuid}/provenance/citations.bib',
+            f'{output_uuid}/provenance/VERSION',
+            f'{output_uuid}/provenance/conda-env.yaml',
+            f'{output_uuid}/provenance/action/action.yaml',
+            f'{output_uuid}/data/ints.txt'
+        }
+
+        exp_contents = 'my special text'
+
+        with zipfile.ZipFile(self.art1, 'r') as zfh:
+            # confirm file structure is what we expect
+            self.assertEqual(exp_namelist, set(zfh.namelist()))
+
+            annotation = zfh.read(
+                f'{output_uuid}/annotations/{annotation_uuid}/note.txt'
+            ).decode('utf-8')
+
+            # confirm the annotation file contains the text we expect
+            self.assertEqual(exp_contents, annotation)
+
+    def test_annotation_create_invalid_annotation_type(self):
+        create_result = self.runner.invoke(
+            tools,
+            ['annotation-create', '--input-path', self.art1,
+             '--annotation-type', 'Foo',
+             '--name', 'mynote', '--text', 'my special text',
+             '--output-path', self.output1]
+        )
+        # confirm the command does produce an error
+        self.assertEqual(create_result.exit_code, 1)
+        self.assertIn("Invalid value for '--annotation-type': 'Foo'",
+                      create_result.output)
+
+    def test_annotation_create_text_and_filepath_provided(self):
+        create_result = self.runner.invoke(
+            tools,
+            ['annotation-create', '--input-path', self.art1,
+             '--annotation-type', 'Note',
+             '--name', 'mynote', '--text', 'my special text',
+             '--file', self.note_file, '--output-path', self.output1]
+        )
+        # confirm the command does produce an error
+        self.assertEqual(create_result.exit_code, 2)
+        self.assertIn("Exactly one of `--text` or `--file` must be provided",
+                      create_result.output)
+
+    def test_annotation_create_no_text_or_filepath_provided(self):
+        create_result = self.runner.invoke(
+            tools,
+            ['annotation-create', '--input-path', self.art1,
+             '--annotation-type', 'Note',
+             '--name', 'mynote', '--output-path', self.output1]
+        )
+        # confirm the command does produce an error
+        self.assertEqual(create_result.exit_code, 2)
+        self.assertIn("Exactly one of `--text` or `--file` must be provided",
+                      create_result.output)
+
+    def test_annotation_create_invalid_name(self):
+        create_result = self.runner.invoke(
+            tools,
+            ['annotation-create', '--input-path', self.art1,
+             '--annotation-type', 'Note',
+             '--name', '@#$%^&*', '--text', 'my special text',
+             '--output-path', self.output1]
+        )
+        # confirm the command does produce an error
+        self.assertEqual(create_result.exit_code, 1)
+        # TODO: this exception should show up in the output same as others
+        self.assertIn('Name "@#$%^&*" is not a valid Python identifier',
+                      str(create_result.exception))
 
 
 if __name__ == "__main__":
