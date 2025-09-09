@@ -419,7 +419,6 @@ class TestExportToFileFormat(TestInspectMetadata):
             'export', '--input-path', self.ints1, '--output-path', output_path,
             '--output-format', 'IntSequenceFormat'
         ])
-
         success = 'Exported %s as IntSequenceFormat to file %s\n' % \
                   (self.ints1, output_path)
         self.assertEqual(success, result.output)
@@ -1314,6 +1313,238 @@ class TestReplay(unittest.TestCase):
                  '--name', 'mynote', '--output-path', out_fp]
             )
             self.assertEqual(remove_result.exit_code, 0)
+
+
+class TestCacheExport(unittest.TestCase):
+    def setUp(self):
+        dummy_plugin = get_dummy_plugin()
+
+        self.runner = CliRunner()
+        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.cache = Cache(os.path.join(self.tempdir, 'cache'))
+
+        ints1 = Artifact.import_data(
+            'IntSequence1', [0, 42, 43], list)
+        self.ints1 = self.cache.save(ints1, 'ints1')
+
+        most_common_viz = dummy_plugin.actions['most_common_viz']
+        viz = most_common_viz(ints1).visualization
+        self.viz = self.cache.save(viz, 'viz')
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_cache_export_to_dir_w_format(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'ints1',
+            '--output-path', output_path, '--output-format',
+            'IntSequenceDirectoryFormat'
+        ])
+
+        self.assertEqual(result.exit_code, 0)
+        self.assertTrue(os.path.isdir(output_path))
+
+    def test_cache_export_to_dir_no_format(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'viz',
+            '--output-path', output_path
+        ])
+
+        self.assertTrue(os.path.isdir(output_path))
+        self.assertIn('index.html', os.listdir(output_path))
+        self.assertIn('index.tsv', os.listdir(output_path))
+
+    def test_cache_export_to_file(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'ints1',
+            '--output-path', output_path, '--output-format',
+            'IntSequenceFormatV2'
+            ])
+
+        with open(output_path, 'r') as f:
+            file = f.read()
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn('0', file)
+        self.assertIn('42', file)
+        self.assertIn('43', file)
+
+    def test_cache_export_to_file_creates_directories(self):
+        output_path = os.path.join(self.tempdir, 'somewhere', 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'ints1',
+            '--output-path', output_path, '--output-format',
+            'IntSequenceFormatV2'
+            ])
+
+        with open(output_path, 'r') as f:
+            file = f.read()
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn('0', file)
+        self.assertIn('42', file)
+        self.assertIn('43', file)
+
+    def test_cache_export_visualization_to_dir(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'viz',
+            '--output-path', output_path
+        ])
+
+        self.assertIn('index.html', os.listdir(output_path))
+        self.assertIn('index.tsv', os.listdir(output_path))
+        self.assertTrue(os.path.isdir(output_path))
+
+    def test_cache_export_visualization_w_format(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'viz',
+            '--output-path', output_path, '--output-format',
+            'IntSequenceDirectoryFormat'
+        ])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertIn('visualization', result.output)
+        self.assertIn('--output-format', result.output)
+
+    def test_cache_export_path_file_is_replaced(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        with open(output_path, 'w') as file:
+            file.write('HelloWorld')
+        self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'ints1',
+            '--output-path', output_path, '--output-format',
+            'IntSequenceFormatV2'
+        ])
+
+        with open(output_path, 'r') as f:
+            file = f.read()
+        self.assertNotIn('HelloWorld', file)
+
+    def test_cache_export_to_file_with_format_success_message(self):
+        output_path = os.path.join(self.tempdir, 'output.int')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'ints1',
+            '--output-path', output_path, '--output-format',
+            'IntSequenceFormatV2'
+            ])
+        success = f'Exported {self.cache.path}:ints1 as IntSequenceFormatV2 ' \
+                  f'to file {output_path}\n'
+        self.assertEqual(success, result.output)
+
+    def test_cache_export_to_dir_without_format_success_message(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'ints1',
+            '--output-path', output_path
+            ])
+        success = f'Exported {self.cache.path}:ints1 as ' \
+                  f'IntSequenceDirectoryFormat to directory {output_path}\n'
+        self.assertEqual(success, result.output)
+
+    def test_cache_export_visualization_to_dir_success_message(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'viz',
+            '--output-path', output_path
+        ])
+        success = f'Exported {self.cache.path}:viz as Visualization to ' \
+                  f'directory {output_path}\n'
+        self.assertEqual(success, result.output)
+
+    def test_cache_export_bad_cache(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.tempdir), '--key', 'viz',
+            '--output-path', output_path
+        ])
+
+        failure = f"Path: '{self.tempdir}' already exists and is not a cache."
+        self.assertIn(failure, result.output)
+
+    def test_cache_export_bad_key(self):
+        output_path = os.path.join(self.tempdir, 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'bad',
+            '--output-path', output_path
+        ])
+
+        failure = f"The cache '{self.cache.path}' does not contain the key " \
+                  "'bad'"
+        self.assertIn(failure, result.output)
+
+
+class TestCacheExportToFileFormat(unittest.TestCase):
+    def setUp(self):
+        dummy_plugin = get_dummy_plugin()
+
+        self.runner = CliRunner()
+        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.cache = Cache(os.path.join(self.tempdir, 'cache'))
+
+        ints1 = Artifact.import_data(
+            'IntSequence1', [0, 42, 43], list)
+        self.ints1 = self.cache.save(ints1, 'ints1')
+
+        most_common_viz = dummy_plugin.actions['most_common_viz']
+        viz = most_common_viz(ints1).visualization
+        self.viz = self.cache.save(viz, 'viz')
+
+        # Working directory is changed to temp directory to prevent cluttering
+        # the repo directory with test files
+        self.current_dir = os.getcwd()
+        os.chdir(self.tempdir)
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+        os.chdir(self.current_dir)
+
+    def test_cache_export_file_format(self):
+        output_path = os.path.join(os.getcwd(), 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'ints1',
+            '--output-path', output_path, '--output-format',
+            'IntSequenceFormat'
+        ])
+
+        success = f'Exported {self.cache.path}:ints1 as IntSequenceFormat ' \
+                  f'to file {output_path}\n'
+        self.assertEqual(success, result.output)
+
+    def test_cache_export_to_filename_without_path(self):
+        output_path = 'output'
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'viz',
+            '--output-path', output_path
+        ])
+        success = f'Exported {self.cache.path}:viz as Visualization to ' \
+                  f'directory {output_path}\n'
+        self.assertEqual(success, result.output)
+
+    def test_cache_export_dir_format(self):
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(str(self.cache.path)), '--key',
+            'ints1', '--output-path', os.getcwd(), '--output-format',
+            'IntSequenceDirectoryFormat'
+        ])
+
+        success = f'Exported {self.cache.path}:ints1 as ' \
+                  f'IntSequenceDirectoryFormat to directory {os.getcwd()}\n'
+        self.assertEqual(success, result.output)
+
+    def test_cache_export_dir_format_nested(self):
+        output_path = os.path.join(os.getcwd(), 'output')
+        result = self.runner.invoke(tools, [
+            'cache-export', '--cache', str(self.cache.path), '--key', 'ints1',
+            '--output-path', output_path, '--output-format',
+            'IntSequenceDirectoryFormat'
+        ])
+
+        success = f'Exported {self.cache.path}:ints1 as ' \
+                  f'IntSequenceDirectoryFormat to directory {output_path}\n'
+        self.assertEqual(success, result.output)
 
 
 if __name__ == "__main__":
