@@ -1520,7 +1520,6 @@ class TestAnnotations(unittest.TestCase):
         )
         # confirm the command does produce an error
         self.assertEqual(create_result.exit_code, 1)
-        # TODO: this exception should show up in the output same as others
         self.assertIn('Name "@#$%^&*" is not a valid Python identifier',
                       str(create_result.exception))
 
@@ -1640,14 +1639,14 @@ class TestAnnotations(unittest.TestCase):
             r'(?s)name:\s*mynote\b.*?name:\s*myothernote\b'
         )
 
-    # TODO: should this raise an error on no annotations found?
-    # def test_annotation_list_no_annotations_failure(self):
-    #     list_result = self.runner.invoke(
-    #         tools,
-    #         ['annotation-list', '--input-path', self.art1]
-    #     )
+    def test_annotation_list_no_annotations_failure(self):
+        list_result = self.runner.invoke(
+            tools,
+            ['annotation-list', '--input-path', self.art1]
+        )
         # confirm the command does produce an error
-        # self.assertEqual(list_result.exit_code, 1)
+        self.assertEqual(list_result.exit_code, 1)
+        self.assertIn('No Annotations found.', list_result.output)
 
 
 if __name__ == "__main__":

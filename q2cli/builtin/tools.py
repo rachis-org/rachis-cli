@@ -1560,6 +1560,17 @@ def annotation_list(input_path):
         click.echo(CONFIG.cfg_style('error', str(e)), err=True)
         raise click.Abort()
 
+    # this is unlikely but just in case
+    if annotations is None:
+        raise click.ClickException("No Annotations found.")
+
+    # we may as well raise an error here to make it clear
+    # that there are no annotations on the given result
+    try:
+        next(annotations)
+    except StopIteration:
+        raise click.ClickException("No Annotations found.")
+
     for annotation in annotations:
         click.echo(CONFIG.cfg_style('type', "ID")+":        ", nl=False)
         click.echo(annotation.id)
