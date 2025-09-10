@@ -1288,9 +1288,11 @@ class TestAnnotations(unittest.TestCase):
         self.art1 = os.path.join(self.tempdir, 'ints1.qza')
         Artifact.import_data('IntSequence1', [0, 1, 2]).save(self.art1)
 
-        # artifact with one starting annotation
+        # artifact that will have one starting annotation
         self.art2 = os.path.join(self.tempdir, 'ints2.qza')
         Artifact.import_data('IntSequence1', [1, 2, 3]).save(self.art2)
+
+        # add note to art2
         self.note1 = Note(name='mynote', text='my special text')
         Artifact.load(self.art2).add_annotation(self.note1)
 
@@ -1624,9 +1626,11 @@ class TestAnnotations(unittest.TestCase):
 
     # ANNOTATION_LIST
     def test_annotation_list_multiple_annotations_success(self):
-        # adding a second annotation to ensure we see multiple in the output
         self.note2 = Note(name='myothernote', text='my extra special text')
-        Artifact.load(self.art2).add_annotation(self.note2)
+
+        self.arty = Artifact.load(self.art2)
+        self.arty.add_annotation(self.note2)
+        self.arty.save(self.art2)
 
         list_result = self.runner.invoke(
             tools,
@@ -1634,10 +1638,10 @@ class TestAnnotations(unittest.TestCase):
         )
         # confirm the command doesn't produce an error
         self.assertEqual(list_result.exit_code, 0)
-        self.assertRegex(
-            list_result.output,
-            r'(?s)name:\s*mynote\b.*?name:\s*myothernote\b'
-        )
+        self.assertRegex(list_result.output,
+                         r'name:\s*mynote\s*type:\s*Note\b')
+        self.assertRegex(list_result.output,
+                         r'name:\s*myothernote\s*type:\s*Note\b')
 
     def test_annotation_list_no_annotations_failure(self):
         list_result = self.runner.invoke(

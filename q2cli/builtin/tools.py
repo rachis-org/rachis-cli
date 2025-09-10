@@ -1555,20 +1555,15 @@ def annotation_list(input_path):
     result = qiime2.sdk.Result.load(input_path)
 
     try:
-        annotations = result.iter_annotations()
+        annotations_iter = result.iter_annotations()
     except Exception as e:
         click.echo(CONFIG.cfg_style('error', str(e)), err=True)
         raise click.Abort()
 
-    # this is unlikely but just in case
-    if annotations is None:
-        raise click.ClickException("No Annotations found.")
-
+    annotations = list(annotations_iter)
     # we may as well raise an error here to make it clear
     # that there are no annotations on the given result
-    try:
-        next(annotations)
-    except StopIteration:
+    if not annotations:
         raise click.ClickException("No Annotations found.")
 
     for annotation in annotations:
