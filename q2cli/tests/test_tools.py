@@ -1598,6 +1598,57 @@ class TestAnnotations(unittest.TestCase):
         self.assertRegex(fetch_result.output,
                          r'name:\s*mynote\s*type:\s*Note\b')
 
+    def test_annotation_fetch_verbose_success(self):
+        fetch_result = self.runner.invoke(
+            tools,
+            ['annotation-fetch', '--input-path', self.art2,
+             '--name', 'mynote', '--verbose']
+        )
+        # confirm the command doesn't produce an error
+        self.assertEqual(fetch_result.exit_code, 0)
+        # ensure the annotation type & name we expect is present in the output
+        self.assertRegex(
+            fetch_result.output,
+            r'name:\s*mynote\s*type:\s*Note\s*contents:\s*my special text\b'
+        )
+
+    def test_annotation_fetch_wrong_name_failure(self):
+        fetch_result = self.runner.invoke(
+            tools,
+            ['annotation-fetch', '--input-path', self.art2,
+             '--name', 'mynote2']
+        )
+        # confirm the command does produce an error
+        self.assertEqual(fetch_result.exit_code, 1)
+        self.assertIn('No Annotation with name: "mynote2"',
+                      fetch_result.output)
+
+    # ANNOTATION_LIST
+    def test_annotation_list_multiple_annotations_success(self):
+        # adding a second annotation to ensure we see multiple in the output
+        self.note2 = Note(name='myothernote', text='my extra special text')
+        Artifact.load(self.art2).add_annotation(self.note2)
+
+        list_result = self.runner.invoke(
+            tools,
+            ['annotation-list', '--input-path', self.art2]
+        )
+        # confirm the command doesn't produce an error
+        self.assertEqual(list_result.exit_code, 0)
+        self.assertRegex(
+            list_result.output,
+            r'(?s)name:\s*mynote\b.*?name:\s*myothernote\b'
+        )
+
+    # TODO: should this raise an error on no annotations found?
+    # def test_annotation_list_no_annotations_failure(self):
+    #     list_result = self.runner.invoke(
+    #         tools,
+    #         ['annotation-list', '--input-path', self.art1]
+    #     )
+        # confirm the command does produce an error
+        # self.assertEqual(list_result.exit_code, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
