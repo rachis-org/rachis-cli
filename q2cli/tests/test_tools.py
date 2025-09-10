@@ -23,6 +23,7 @@ from qiime2.metadata.base import SUPPORTED_COLUMN_TYPES
 from qiime2.core.cache import Cache
 from qiime2.sdk.result import Result
 from qiime2.sdk.plugin_manager import PluginManager
+from qiime2.core.annotate import Note
 
 from q2cli.util import load_metadata
 from q2cli.builtin.tools import tools
@@ -1280,24 +1281,32 @@ class TestReplay(unittest.TestCase):
 
 class TestAnnotations(unittest.TestCase):
     def setUp(self):
-        get_dummy_plugin()
         self.runner = CliRunner()
         self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
 
+        # artifact without any starting annotations
         self.art1 = os.path.join(self.tempdir, 'ints1.qza')
         Artifact.import_data('IntSequence1', [0, 1, 2]).save(self.art1)
+
+        # artifact with one starting annotation
+        self.art2 = os.path.join(self.tempdir, 'ints2.qza')
+        Artifact.import_data('IntSequence1', [1, 2, 3]).save(self.art2)
+        self.note1 = Note(name='mynote', text='my special text')
+        Artifact.load(self.art2).add_annotation(self.note1)
+
+        # output path for self.art1 after adding annotation
         self.output1 = os.path.join(self.tempdir, 'ints1_annotated.qza')
 
+        # annotation path for note from file
         self.note_file = os.path.join(
                 self.tempdir, 'note_file.txt')
-
         with open(self.note_file, 'w') as f:
             f.write('my special text')
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-    def test_annotation_commands_roundtrip(self):
+    def test_annotation_commands_roundtrip_success(self):
         create_result = self.runner.invoke(
             tools,
             ['annotation-create', '--input-path', self.art1,
@@ -1327,7 +1336,8 @@ class TestAnnotations(unittest.TestCase):
         )
         self.assertEqual(remove_result.exit_code, 0)
 
-    def test_annotation_create_with_text(self):
+    # ANNOTATION_CREATE
+    def test_annotation_create_with_text_success(self):
         create_result = self.runner.invoke(
             tools,
             ['annotation-create', '--input-path', self.art1,
@@ -1372,7 +1382,7 @@ class TestAnnotations(unittest.TestCase):
             self.assertEqual(exp_contents, annotation)
 
     # make sure we see same results as w/inline text for input
-    def test_annotation_create_with_file(self):
+    def test_annotation_create_with_file_success(self):
         create_result = self.runner.invoke(
             tools,
             ['annotation-create', '--input-path', self.art1,
@@ -1418,7 +1428,7 @@ class TestAnnotations(unittest.TestCase):
 
     # make sure we don't run into any errors & see same result
     # when overwriting the original artifact fp
-    def test_annotation_create_overwriting_input_file(self):
+    def test_annotation_create_overwriting_input_file_success(self):
         create_result = self.runner.invoke(
             tools,
             ['annotation-create', '--input-path', self.art1,
@@ -1462,7 +1472,7 @@ class TestAnnotations(unittest.TestCase):
             # confirm the annotation file contains the text we expect
             self.assertEqual(exp_contents, annotation)
 
-    def test_annotation_create_invalid_annotation_type(self):
+    def test_annotation_create_invalid_annotation_type_failure(self):
         create_result = self.runner.invoke(
             tools,
             ['annotation-create', '--input-path', self.art1,
@@ -1475,7 +1485,7 @@ class TestAnnotations(unittest.TestCase):
         self.assertIn("Invalid value for '--annotation-type': 'Foo'",
                       create_result.output)
 
-    def test_annotation_create_text_and_filepath_provided(self):
+    def test_annotation_create_text_and_filepath_provided_failure(self):
         create_result = self.runner.invoke(
             tools,
             ['annotation-create', '--input-path', self.art1,
@@ -1488,7 +1498,7 @@ class TestAnnotations(unittest.TestCase):
         self.assertIn("Exactly one of `--text` or `--file` must be provided",
                       create_result.output)
 
-    def test_annotation_create_no_text_or_filepath_provided(self):
+    def test_annotation_create_no_text_or_filepath_provided_failure(self):
         create_result = self.runner.invoke(
             tools,
             ['annotation-create', '--input-path', self.art1,
@@ -1500,7 +1510,7 @@ class TestAnnotations(unittest.TestCase):
         self.assertIn("Exactly one of `--text` or `--file` must be provided",
                       create_result.output)
 
-    def test_annotation_create_invalid_name(self):
+    def test_annotation_create_invalid_annotation_name_failure(self):
         create_result = self.runner.invoke(
             tools,
             ['annotation-create', '--input-path', self.art1,
@@ -1513,6 +1523,80 @@ class TestAnnotations(unittest.TestCase):
         # TODO: this exception should show up in the output same as others
         self.assertIn('Name "@#$%^&*" is not a valid Python identifier',
                       str(create_result.exception))
+
+    def test_annotation_create_existing_annotation_name_failure(self):
+        create_result = self.runner.invoke(
+            tools,
+            ['annotation-create', '--input-path', self.art2,
+             '--annotation-type', 'Note',
+             '--name', 'mynote', '--file', self.note_file,
+             '--output-path', self.output1]
+        )
+        # confirm the command does produce an error
+        self.assertEqual(create_result.exit_code, 1)
+        self.assertIn('Duplicate name detected when attempting to add '
+                      'Annotation with name: "mynote"', create_result.output)
+
+    # ANNOTATION_REMOVE
+    def test_annotation_remove_new_filepath_success(self):
+        remove_result = self.runner.invoke(
+            tools,
+            ['annotation-remove', '--input-path', self.art2,
+             '--name', 'mynote', '--output-path', self.output1]
+        )
+        # confirm the command doesn't produce an error
+        self.assertEqual(remove_result.exit_code, 0)
+
+        with zipfile.ZipFile(self.output1, 'r') as zfh:
+            # confirm annotations dir has been removed
+            self.assertNotIn('annotations', set(zfh.namelist()))
+
+    def test_annotation_remove_existing_filepath_success(self):
+        remove_result = self.runner.invoke(
+            tools,
+            ['annotation-remove', '--input-path', self.art2,
+             '--name', 'mynote', '--output-path', self.art2]
+        )
+        # confirm the command doesn't produce an error
+        self.assertEqual(remove_result.exit_code, 0)
+
+        with zipfile.ZipFile(self.art2, 'r') as zfh:
+            # confirm annotations dir has been removed
+            self.assertNotIn('annotations', set(zfh.namelist()))
+
+    def test_annotation_remove_no_annotations_failure(self):
+        remove_result = self.runner.invoke(
+            tools,
+            ['annotation-remove', '--input-path', self.art1,
+             '--name', 'mynote', '--output-path', self.output1]
+        )
+        # confirm the command does produce an error
+        self.assertEqual(remove_result.exit_code, 1)
+        self.assertIn('No Annotation found with name: "mynote"',
+                      remove_result.output)
+
+    def test_annotation_remove_wrong_annotation_name_failure(self):
+        remove_result = self.runner.invoke(
+            tools,
+            ['annotation-remove', '--input-path', self.art2,
+             '--name', 'myspecialnote', '--output-path', self.output1]
+        )
+        # confirm the command does produce an error
+        self.assertEqual(remove_result.exit_code, 1)
+        self.assertIn('No Annotation found with name: "myspecialnote"',
+                      remove_result.output)
+
+    # ANNOTATION_FETCH
+    def test_annotation_fetch_no_verbose_success(self):
+        fetch_result = self.runner.invoke(
+            tools,
+            ['annotation-fetch', '--input-path', self.art2, '--name', 'mynote']
+        )
+        # confirm the command doesn't produce an error
+        self.assertEqual(fetch_result.exit_code, 0)
+        # ensure the annotation type & name we expect is present in the output
+        self.assertRegex(fetch_result.output,
+                         r'name:\s*mynote\s*type:\s*Note\b')
 
 
 if __name__ == "__main__":
