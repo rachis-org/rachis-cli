@@ -511,6 +511,38 @@ def _merge_metadata(paths):
     return metadata
 
 
+@tools.command(short_help='Make a QIIME 2 Report.',
+               help='Make a QIIME 2 report consisting of multiple '
+                    'visualizations. Visualizations must have unique '
+                    'filenames.',
+               cls=ToolCommand)
+@click.argument('visualization_paths', metavar='VIZ', required=True, nargs=-1,
+                type=click.Path(file_okay=True, dir_okay=False, readable=True))
+@click.option('--report-path', required=True, metavar='REPORT',
+              type=click.Path(exists=False, file_okay=True, dir_okay=False,
+                              writable=True),
+              help='Path where output report should be written.')
+def make_report(visualization_paths, report_path):
+    from qiime2 import Visualization
+    from q2templates.reports import matryoshka_template
+    from q2cli.core.config import CONFIG
+
+    loaded = [Visualization.load(path) for path in visualization_paths]
+    keys = [os.path.basename(x).rsplit('.', 1)[0] for x in visualization_paths]
+    if len(set(keys)) < len(keys):
+        error = ('Multiple files share the same name and cannot be'
+                 ' disambiguated. Please ensure that all filenames provided'
+                 ' are unique.')
+        click.echo(CONFIG.cfg_style('error', error), err=True)
+        click.get_current_context().exit(1)
+
+    entries = dict(zip(keys, loaded))
+
+    report = Visualization.make_report(matryoshka_template, entries)
+    result = report.save(report_path)
+    click.echo(CONFIG.cfg_style('success', f'Report saved to {result}'))
+
+
 @tools.command(short_help='View a QIIME 2 Result.',
                help="Displays a QIIME 2 Result until the command exits. To "
                     "open a QIIME 2 Visualization so it can be used after the "
