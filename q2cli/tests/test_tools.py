@@ -1308,36 +1308,6 @@ class TestAnnotations(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-    def test_annotation_commands_roundtrip_success(self):
-        create_result = self.runner.invoke(
-            tools,
-            ['annotation-create', '--input-path', self.art1,
-                '--annotation-type', 'Note',
-                '--name', 'mynote', '--text', 'my special text',
-                '--output-path', self.output1]
-        )
-        self.assertEqual(create_result.exit_code, 0)
-
-        fetch_result = self.runner.invoke(
-            tools,
-            ['annotation-fetch', '--input-path', self.output1,
-                '--name', 'mynote']
-        )
-        self.assertEqual(fetch_result.exit_code, 0)
-
-        list_result = self.runner.invoke(
-            tools,
-            ['annotation-list', '--input-path', self.output1]
-        )
-        self.assertEqual(list_result.exit_code, 0)
-
-        remove_result = self.runner.invoke(
-            tools,
-            ['annotation-remove', '--input-path', self.output1,
-                '--name', 'mynote', '--output-path', self.output1]
-        )
-        self.assertEqual(remove_result.exit_code, 0)
-
     # ANNOTATION_CREATE
     def test_annotation_create_with_text_success(self):
         create_result = self.runner.invoke(

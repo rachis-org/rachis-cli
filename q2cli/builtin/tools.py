@@ -1441,7 +1441,8 @@ def annotation_create(input_path, annotation_type,
     name='annotation-remove',
     short_help='Remove an Annotation from a QIIME 2 Result.',
     help='Remove an existing Annotation (by name) from'
-         ' an Artifact or Visualization.'
+         ' an Artifact or Visualization.',
+    cls=ToolCommand
 )
 @click.option(
     '--input-path',
@@ -1487,7 +1488,8 @@ def annotation_remove(input_path, name, output_path):
     name='annotation-fetch',
     short_help='Fetch an Annotation from a QIIME 2 Result.',
     help='Fetch an existing Annotation (by name) from'
-         ' an Artifact or Visualization.'
+         ' an Artifact or Visualization.',
+    cls=ToolCommand
 )
 @click.option(
     '--input-path',
@@ -1536,7 +1538,8 @@ def annotation_fetch(input_path, name, verbose):
     name='annotation-list',
     short_help='List Annotations on a QIIME 2 Result.',
     help='List all Annotations that are attached to'
-         ' an Artifact or Visualization.'
+         ' an Artifact or Visualization.',
+    cls=ToolCommand
 )
 @click.option(
     '--input-path',
