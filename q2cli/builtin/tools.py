@@ -1494,7 +1494,8 @@ def annotation_create(input_path, annotation_type,
     name='annotation-remove',
     short_help='Remove an Annotation from a QIIME 2 Result.',
     help='Remove an existing Annotation (by name) from'
-         ' an Artifact or Visualization.'
+         ' an Artifact or Visualization.',
+    cls=ToolCommand
 )
 @click.option(
     '--input-path',
@@ -1540,7 +1541,8 @@ def annotation_remove(input_path, name, output_path):
     name='annotation-fetch',
     short_help='Fetch an Annotation from a QIIME 2 Result.',
     help='Fetch an existing Annotation (by name) from'
-         ' an Artifact or Visualization.'
+         ' an Artifact or Visualization.',
+    cls=ToolCommand
 )
 @click.option(
     '--input-path',
@@ -1589,7 +1591,8 @@ def annotation_fetch(input_path, name, verbose):
     name='annotation-list',
     short_help='List Annotations on a QIIME 2 Result.',
     help='List all Annotations that are attached to'
-         ' an Artifact or Visualization.'
+         ' an Artifact or Visualization.',
+    cls=ToolCommand
 )
 @click.option(
     '--input-path',
@@ -1608,10 +1611,16 @@ def annotation_list(input_path):
     result = qiime2.sdk.Result.load(input_path)
 
     try:
-        annotations = result.iter_annotations()
+        annotations_iter = result.iter_annotations()
     except Exception as e:
         click.echo(CONFIG.cfg_style('error', str(e)), err=True)
         raise click.Abort()
+
+    annotations = list(annotations_iter)
+    # we may as well raise an error here to make it clear
+    # that there are no annotations on the given result
+    if not annotations:
+        raise click.ClickException("No Annotations found.")
 
     for annotation in annotations:
         click.echo(CONFIG.cfg_style('type', "ID")+":        ", nl=False)
