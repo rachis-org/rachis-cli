@@ -138,6 +138,7 @@ def _get_metavar(type):
         'Bool': '',
         'Jobs': 'NJOBS',
         'Threads': 'NTHREADS',
+        'Capture': 'CAPTURE',
     }
 
     style = qiime2.sdk.util.interrogate_collection_type(type)
