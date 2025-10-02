@@ -1854,5 +1854,59 @@ class TestCacheExportToFileFormat(unittest.TestCase):
         self.assertEqual(success, result.output)
 
 
+class TestMakeReport(unittest.TestCase):
+    def setUp(self):
+        # ensure dummy plugin is registered
+        self.dp = get_dummy_plugin()
+        self.runner = CliRunner()
+        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+
+        # create an artifact to drive visualizations
+        self.ints = Artifact.import_data('IntSequence1', [0, 1, 2])
+
+        # create two visualizations with unique basenames
+        self.viz1 = os.path.join(self.tempdir, 'viz1.qzv')
+        self.dp.actions['most_common_viz'](self.ints).visualization.save(
+            self.viz1)
+
+        self.viz2 = os.path.join(self.tempdir, 'viz2.qzv')
+        self.dp.actions['most_common_viz'](self.ints).visualization.save(
+            self.viz2)
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_make_report_success(self):
+        report = os.path.join(self.tempdir, 'report.qzv')
+        result = self.runner.invoke(
+            tools, ['make-report', self.viz1, self.viz2, '--report-path',
+                    report])
+
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn('Report saved to', result.output)
+        # ensure the report file was written and is a zip archive
+        self.assertTrue(zipfile.is_zipfile(report))
+
+    def test_make_report_duplicate_names(self):
+        # create two visualizations that share the same filename but live in
+        # different directories to trigger the duplicate-name error
+        a_dir = os.path.join(self.tempdir, 'a')
+        b_dir = os.path.join(self.tempdir, 'b')
+        os.mkdir(a_dir)
+        os.mkdir(b_dir)
+
+        dup1 = os.path.join(a_dir, 'viz.qzv')
+        dup2 = os.path.join(b_dir, 'viz.qzv')
+        self.dp.actions['most_common_viz'](self.ints).visualization.save(dup1)
+        self.dp.actions['most_common_viz'](self.ints).visualization.save(dup2)
+
+        report = os.path.join(self.tempdir, 'report.qzv')
+        result = self.runner.invoke(
+            tools, ['make-report', dup1, dup2, '--report-path', report])
+
+        self.assertNotEqual(result.exit_code, 0)
+        self.assertIn('Multiple files share the same name', result.output)
+
+
 if __name__ == "__main__":
     unittest.main()
