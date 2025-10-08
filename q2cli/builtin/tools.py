@@ -11,6 +11,8 @@ from typing import Literal
 
 import click
 
+from qiime2.core.annotate import ANNOTATION_TYPE_LIST
+
 import q2cli.util
 from q2cli.click.command import ToolCommand, ToolGroupCommand
 
@@ -1456,7 +1458,7 @@ def supplement_replay(
 @click.option(
     '--annotation-type',
     required=True,
-    type=click.Choice(['Note'], case_sensitive=True),
+    type=click.Choice(ANNOTATION_TYPE_LIST, case_sensitive=True),
     help='Annotation type to create.'
 )
 @click.option(
@@ -1464,6 +1466,7 @@ def supplement_replay(
     required=True,
     help='Name for your Annotation (must be unique for a given Result).'
 )
+# NOTE-specific inputs
 @click.option(
     '--text',
     required=False,
@@ -1479,6 +1482,19 @@ def supplement_replay(
     help='Path to a text file whose contents will be added'
          ' to your Annotation. Mutually exclusive with `--text`.'
 )
+# SIGNATURE-specific inputs
+@click.option(
+    '--signer-uid',
+    required=False,
+    help='Exact UID of the keypair in GnuPG, e.g. "Name <email@example.com>". '
+         'Mutually exclusive with `--fingerprint`.'
+)
+@click.option(
+    '--fingerprint',
+    required=False,
+    help='Fingerprint of the keypair in GnuPG (spaces ok). '
+         'Mutually exclusive with `--signer-uid`.'
+)
 @click.option(
     '--output-path',
     required=False,
@@ -1486,23 +1502,43 @@ def supplement_replay(
     help='Where to write the newly annotated result.'
          '[default: overwrite input file]'
 )
-def annotation_create(input_path, annotation_type,
-                      name, text, filepath, output_path):
+def annotation_create(input_path, annotation_type, name,
+                      # note inputs
+                      text, filepath,
+                      # signature inputs
+                      signer_uid, fingerprint,
+                      output_path):
     """Load a Result, add an Annotation and save."""
     import qiime2.sdk
-    from qiime2.core.annotate import Note
+    from qiime2.core.annotate import Note, Signature
     from q2cli.core.config import CONFIG
-
-    # enforce exactly one of `--text` or `--file`
-    if (text is None) == (filepath is None):
-        raise click.UsageError('Exactly one of `--text` or `--file`'
-                               ' must be provided.')
 
     result = qiime2.sdk.Result.load(input_path)
 
-    # TODO: add support for additional annotation types post 7.0
     if annotation_type == 'Note':
+        # enforce exactly one of `--text` or `--file`
+        if (text is None) == (filepath is None):
+            raise click.UsageError('Exactly one of `--text` or `--file`'
+                                   ' must be provided.')
+        # ensure Signature-specific inputs aren't used
+        if signer_uid or fingerprint:
+            raise click.UsageError('`--signer-uid`/`--fingerprint` are only '
+                                   'valid for annotations of type Signature.')
+
         annotation = Note(name=name, text=text, filepath=filepath)
+
+    elif annotation_type == 'Signature':
+        # enforce exactly one of `--signer-uid` or `--signature`
+        if (signer_uid is None) == (fingerprint is None):
+            raise click.UsageError('Exactly one of `--signer-uid` or '
+                                   '`--signature` must be provided.')
+        if text or filepath:
+            raise click.UsageError('`--text`/`--filepath` are only valid for '
+                                   'annotations of type Note.')
+
+        annotation = Signature(name=name, signer_uid=signer_uid,
+                               fingerprint=fingerprint)
+
     else:
         raise click.BadParameter('Unsupported annotation type: '
                                  f'{annotation_type}')
@@ -1662,3 +1698,28 @@ def annotation_list(input_path):
         click.echo(CONFIG.cfg_style('type', "type")+":      ", nl=False)
         click.echo(annotation.annotation_type)
         click.echo('', nl=True)
+
+
+@tools.command(
+    name='signature-verify',
+    short_help='Verify a Signature Annotation on a QIIME 2 Result.',
+    help='Verify the Signature fingerprint matches an existing key pair on '
+         'the local GPG keyring, the checksum digest matches a newly '
+         'calculated sha512sum of the root checksums file, and the '
+         'Signature-level checksums match with the expected sha512sum of '
+         'each file on a QIIME 2 Result.',
+    cls=ToolCommand
+)
+@click.option(
+    '--input-path',
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help='The `.qza` or `.qzv` to verify a Signature from.'
+)
+@click.option(
+    '--name',
+    required=True,
+    help='The name of the Signature to verify.'
+)
+def signature_verify(input_path, name):
+    pass
