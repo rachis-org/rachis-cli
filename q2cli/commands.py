@@ -315,10 +315,27 @@ class ActionCommand(BaseCommandMixin, click.Command):
 
         options = [*self._inputs, *self._params, *self._outputs, *self._misc]
         help_ = [action['description']]
+
         if self.action['deprecated']:
             help_.append(CONFIG.cfg_style(
                 'warning', 'WARNING:\n\nThis command is deprecated and will '
                            'be removed in a future version of this plugin.'))
+        elif self.action['migrated']:
+            mig = self.action['migrated']
+            if isinstance(mig, dict):
+                mig_help = (
+                    'WARNING:\n\nThis command will be migrated from '
+                    f'{q2cli.util.to_cli_name(self.plugin["name"])} in '
+                    f'{mig["from_distro"]} to {mig["to_plugin"]} in '
+                    f'{mig["to_distro"]} in {mig["epoch"]}.'
+                )
+            else:
+                mig_help = (
+                    'WARNING:\n\nThis command is slated for migration to '
+                    'another plugin/distribution in a future release.'
+                )
+            help_.append(CONFIG.cfg_style('warning', mig_help))
+
         super().__init__(name, params=options, callback=self,
                          short_help=action['name'], help='\n\n'.join(help_))
 
@@ -505,6 +522,12 @@ class ActionCommand(BaseCommandMixin, click.Command):
             msg = ('Plugin warning from %s:\n\n%s is deprecated and '
                    'will be removed in a future version of this plugin.' %
                    (q2cli.util.to_cli_name(self.plugin['name']), self.name))
+            click.echo(CONFIG.cfg_style('warning', msg))
+
+        if action.migrated:
+            msg = ('Plugin warning from %s:\n\n%s' % (
+                q2cli.util.to_cli_name(self.plugin['name']),
+                action._build_migration_message()))
             click.echo(CONFIG.cfg_style('warning', msg))
 
         cleanup_logfile = False
