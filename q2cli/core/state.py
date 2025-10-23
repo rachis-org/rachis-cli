@@ -41,6 +41,7 @@ def get_action_state(action):
         'signature': [],
         'epilog': [],
         'deprecated': action.deprecated,
+        'migrated': dict(action.migrated) if action.migrated else False,
     }
 
     sig = action.signature

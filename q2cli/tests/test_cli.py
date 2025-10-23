@@ -485,6 +485,185 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result.output, EXPECTED_CITATIONS)
 
 
+class TestMigrated(unittest.TestCase):
+    def setUp(self):
+        get_dummy_plugin()
+
+        self.runner = CliRunner()
+        self.plugin_command = \
+            RootCommand().get_command(ctx=None, name='dummy-plugin')
+        self.tempdir = tempfile.mkdtemp(prefix='qiime2-cli-test-temp-')
+        self.output_path = os.path.join(self.tempdir, 'output.qza')
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_migrated_all_optional_keys(self):
+        result = \
+            self.runner.invoke(self.plugin_command,
+                               ['migrated-method-all-optional-keys',
+                                '--o-out', self.output_path, '--verbose'])
+        result_help = self.runner.invoke(self.plugin_command,
+                                         ['migrated-method-all-optional-keys',
+                                          '--help'])
+
+        for rslt in [result, result_help]:
+            self.assertEqual(rslt.exit_code, 0)
+
+            self.assertIn('This Method is slated for migration from the '
+                          'dummy_plugin plugin of the old distribution to '
+                          'the smart plugin of the new distribution '
+                          'in 2025.4.', result.output)
+
+        self.assertTrue(os.path.exists(self.output_path))
+        artifact = Artifact.load(self.output_path)
+        self.assertEqual(artifact.view(dict), {'ziggy': '42'})
+
+    def test_migrated_no_optional_keys(self):
+        result = \
+            self.runner.invoke(self.plugin_command,
+                               ['migrated-method-no-optional-keys',
+                                '--o-out', self.output_path, '--verbose'])
+        result_help = self.runner.invoke(self.plugin_command,
+                                         ['migrated-method-no-optional-keys',
+                                          '--help'])
+
+        for rslt in [result, result_help]:
+            self.assertEqual(rslt.exit_code, 0)
+
+            self.assertIn('This Method is slated for migration from the '
+                          'dummy_plugin plugin to the smart plugin in a '
+                          'future release.', result.output)
+
+        self.assertTrue(os.path.exists(self.output_path))
+        artifact = Artifact.load(self.output_path)
+        self.assertEqual(artifact.view(dict), {'ziggy': '42'})
+
+    def test_migrated_from_distro(self):
+        result = \
+            self.runner.invoke(self.plugin_command,
+                               ['migrated-method-from-distro',
+                                '--o-out', self.output_path, '--verbose'])
+        result_help = self.runner.invoke(self.plugin_command,
+                                         ['migrated-method-from-distro',
+                                          '--help'])
+
+        for rslt in [result, result_help]:
+            self.assertEqual(rslt.exit_code, 0)
+
+            self.assertIn('This Method is slated for migration from the '
+                          'dummy_plugin plugin of the old distribution '
+                          'to the smart plugin in a future release.',
+                          result.output)
+
+        self.assertTrue(os.path.exists(self.output_path))
+        artifact = Artifact.load(self.output_path)
+        self.assertEqual(artifact.view(dict), {'ziggy': '42'})
+
+    def test_migrated_to_distro(self):
+        result = \
+            self.runner.invoke(self.plugin_command,
+                               ['migrated-method-to-distro',
+                                '--o-out', self.output_path, '--verbose'])
+        result_help = self.runner.invoke(self.plugin_command,
+                                         ['migrated-method-to-distro',
+                                          '--help'])
+
+        for rslt in [result, result_help]:
+            self.assertEqual(rslt.exit_code, 0)
+
+            self.assertIn('This Method is slated for migration from the '
+                          'dummy_plugin plugin to the smart plugin of the '
+                          'new distribution in a future release.',
+                          result.output)
+
+        self.assertTrue(os.path.exists(self.output_path))
+        artifact = Artifact.load(self.output_path)
+        self.assertEqual(artifact.view(dict), {'ziggy': '42'})
+
+    def test_migrated_epoch(self):
+        result = \
+            self.runner.invoke(self.plugin_command,
+                               ['migrated-method-epoch',
+                                '--o-out', self.output_path, '--verbose'])
+        result_help = self.runner.invoke(self.plugin_command,
+                                         ['migrated-method-epoch',
+                                          '--help'])
+
+        for rslt in [result, result_help]:
+            self.assertEqual(rslt.exit_code, 0)
+
+            self.assertIn('This Method is slated for migration from the '
+                          'dummy_plugin plugin to the smart plugin '
+                          'in 2025.4.', result.output)
+
+        self.assertTrue(os.path.exists(self.output_path))
+        artifact = Artifact.load(self.output_path)
+        self.assertEqual(artifact.view(dict), {'ziggy': '42'})
+
+    def test_migrated_from_distro_to_distro(self):
+        result = \
+            self.runner.invoke(self.plugin_command,
+                               ['migrated-method-from-distro-to-distro',
+                                '--o-out', self.output_path, '--verbose'])
+        result_help = \
+            self.runner.invoke(self.plugin_command,
+                               ['migrated-method-from-distro-to-distro',
+                                '--help'])
+
+        for rslt in [result, result_help]:
+            self.assertEqual(rslt.exit_code, 0)
+
+            self.assertIn('This Method is slated for migration from the '
+                          'dummy_plugin plugin of the old distribution to '
+                          'the smart plugin of the new distribution '
+                          'in a future release.', result.output)
+
+        self.assertTrue(os.path.exists(self.output_path))
+        artifact = Artifact.load(self.output_path)
+        self.assertEqual(artifact.view(dict), {'ziggy': '42'})
+
+    def test_migrated_from_distro_epoch(self):
+        result = \
+            self.runner.invoke(self.plugin_command,
+                               ['migrated-method-from-distro-epoch',
+                                '--o-out', self.output_path, '--verbose'])
+        result_help = self.runner.invoke(self.plugin_command,
+                                         ['migrated-method-from-distro-epoch',
+                                          '--help'])
+
+        for rslt in [result, result_help]:
+            self.assertEqual(rslt.exit_code, 0)
+
+            self.assertIn('This Method is slated for migration from the '
+                          'dummy_plugin plugin of the old distribution to '
+                          'the smart plugin in 2025.4.', result.output)
+
+        self.assertTrue(os.path.exists(self.output_path))
+        artifact = Artifact.load(self.output_path)
+        self.assertEqual(artifact.view(dict), {'ziggy': '42'})
+
+    def test_migrated_to_distro_epoch(self):
+        result = \
+            self.runner.invoke(self.plugin_command,
+                               ['migrated-method-to-distro-epoch',
+                                '--o-out', self.output_path, '--verbose'])
+        result_help = self.runner.invoke(self.plugin_command,
+                                         ['migrated-method-to-distro-epoch',
+                                          '--help'])
+
+        for rslt in [result, result_help]:
+            self.assertEqual(rslt.exit_code, 0)
+
+            self.assertIn('This Method is slated for migration from the '
+                          'dummy_plugin plugin to the smart plugin of the '
+                          'new distribution in 2025.4.', result.output)
+
+        self.assertTrue(os.path.exists(self.output_path))
+        artifact = Artifact.load(self.output_path)
+        self.assertEqual(artifact.view(dict), {'ziggy': '42'})
+
+
 class TestOptionalArtifactSupport(unittest.TestCase):
     def setUp(self):
         get_dummy_plugin()
