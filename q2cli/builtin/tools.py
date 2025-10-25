@@ -11,7 +11,7 @@ from typing import Literal
 
 import click
 
-from qiime2.core.annotate import ANNOTATION_TYPE_LIST
+from qiime2.core.annotate import ANNOTATION_TYPE_DICT
 
 import q2cli.util
 from q2cli.click.command import ToolCommand, ToolGroupCommand
@@ -1458,7 +1458,7 @@ def supplement_replay(
 @click.option(
     '--annotation-type',
     required=True,
-    type=click.Choice(ANNOTATION_TYPE_LIST, case_sensitive=True),
+    type=click.Choice(ANNOTATION_TYPE_DICT, case_sensitive=True),
     help='Annotation type to create.'
 )
 @click.option(
@@ -1482,18 +1482,11 @@ def supplement_replay(
     help='Path to a text file whose contents will be added'
          ' to your Annotation. Mutually exclusive with `--text`.'
 )
-# SIGNATURE-specific inputs
-@click.option(
-    '--signer-uid',
-    required=False,
-    help='Exact UID of the keypair in GnuPG, e.g. "Name <email@example.com>". '
-         'Mutually exclusive with `--fingerprint`.'
-)
+# SIGNATURE-specific input
 @click.option(
     '--fingerprint',
     required=False,
     help='Fingerprint of the keypair in GnuPG (spaces ok). '
-         'Mutually exclusive with `--signer-uid`.'
 )
 @click.option(
     '--output-path',
@@ -1505,8 +1498,8 @@ def supplement_replay(
 def annotation_create(input_path, annotation_type, name,
                       # note inputs
                       text, filepath,
-                      # signature inputs
-                      signer_uid, fingerprint,
+                      # signature input
+                      fingerprint,
                       output_path):
     """Load a Result, add an Annotation and save."""
     import qiime2.sdk
@@ -1521,23 +1514,20 @@ def annotation_create(input_path, annotation_type, name,
             raise click.UsageError('Exactly one of `--text` or `--file`'
                                    ' must be provided.')
         # ensure Signature-specific inputs aren't used
-        if signer_uid or fingerprint:
-            raise click.UsageError('`--signer-uid`/`--fingerprint` are only '
-                                   'valid for annotations of type Signature.')
+        if fingerprint:
+            raise click.UsageError('`--fingerprint` is only valid for '
+                                   'annotations of type Signature.')
 
         annotation = Note(name=name, text=text, filepath=filepath)
 
     elif annotation_type == 'Signature':
-        # enforce exactly one of `--signer-uid` or `--signature`
-        if (signer_uid is None) == (fingerprint is None):
-            raise click.UsageError('Exactly one of `--signer-uid` or '
-                                   '`--signature` must be provided.')
+        if fingerprint is None:
+            raise click.UsageError('`--signature` must be provided.')
         if text or filepath:
             raise click.UsageError('`--text`/`--filepath` are only valid for '
                                    'annotations of type Note.')
 
-        annotation = Signature(name=name, signer_uid=signer_uid,
-                               fingerprint=fingerprint)
+        annotation = Signature(name=name, fingerprint=fingerprint)
 
     else:
         raise click.BadParameter('Unsupported annotation type: '
@@ -1722,4 +1712,17 @@ def annotation_list(input_path):
     help='The name of the Signature to verify.'
 )
 def signature_verify(input_path, name):
-    pass
+    import qiime2.sdk
+    from q2cli.core.config import CONFIG
+
+    result = qiime2.sdk.Result.load(input_path)
+
+    try:
+        result.verify(name)
+    except Exception as e:
+        click.echo(CONFIG.cfg_style('error', str(e)), err=True)
+        raise click.Abort()
+
+    click.echo(CONFIG.cfg_style('success',
+                                f'Signature {name} on Result '
+                                f'{input_path} verified successfully.'))
