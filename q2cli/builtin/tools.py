@@ -1458,7 +1458,7 @@ def supplement_replay(
 @click.option(
     '--annotation-type',
     required=True,
-    type=click.Choice(ANNOTATION_TYPE_DICT, case_sensitive=True),
+    type=click.Choice(list(ANNOTATION_TYPE_DICT.keys()), case_sensitive=True),
     help='Annotation type to create.'
 )
 @click.option(
