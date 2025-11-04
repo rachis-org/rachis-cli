@@ -1640,9 +1640,18 @@ def annotation_fetch(input_path, name, verbose):
     click.echo(CONFIG.cfg_style('type', "type")+":      ", nl=False)
     click.echo(annotation.annotation_type)
     if verbose:
-        click.echo('', nl=True)
-        click.echo(CONFIG.cfg_style('type', "contents")+":  ", nl=False)
-        click.echo(annotation.contents)
+        if annotation.annotation_type == 'Signature':
+            click.echo('', nl=True)
+            click.echo(CONFIG.cfg_style('type', "signer_name")+": ", nl=False)
+            click.echo(annotation.signer_name)
+            click.echo(CONFIG.cfg_style('type', "signer_email")+": ", nl=False)
+            click.echo(annotation.signer_email)
+            click.echo(CONFIG.cfg_style('type', "fingerprint")+": ", nl=False)
+            click.echo(annotation.fingerprint)
+        else:
+            click.echo('', nl=True)
+            click.echo(CONFIG.cfg_style('type', "contents")+":  ", nl=False)
+            click.echo(annotation.contents)
 
 
 @tools.command(
