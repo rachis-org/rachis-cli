@@ -12,16 +12,16 @@ import importlib.resources
 import re
 import shlex
 import textwrap
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple, Type
 
 from qiime2 import ResultCollection
 import qiime2.sdk.usage as usage
 from qiime2.sdk.usage import (
-    UsageVariable, Usage, UsageInputs, UsageOutputs, UsageOutputNames
+    UsageVariable, Usage, UsageInputs, UsageOutputs
 )
 from qiime2.sdk import Action
 from qiime2.core.archive.provenance_lib.usage_drivers import (
-    build_header, build_footer
+    build_header, build_footer, ReplayUsageAction
 )
 from qiime2.core.archive.provenance_lib import ProvDAG
 
@@ -439,6 +439,8 @@ class ReplayCLIUsageVariable(CLIUsageVariable):
 
 
 class ReplayCLIUsage(CLIUsage):
+    UsageAction: Type[ReplayUsageAction] = ReplayUsageAction
+
     shebang = '#!/usr/bin/env bash'
     header_boundary = ('#' * 79)
     set_ex = [
@@ -630,9 +632,9 @@ class ReplayCLIUsage(CLIUsage):
 
     def action(
         self,
-        action: Action,
+        action: ReplayUsageAction,
         inputs: UsageInputs,
-        outputs: UsageOutputNames
+        outputs: UsageOutputs
     ) -> UsageOutputs:
         '''
         Overrides parent method to fill in missing outputlines from
@@ -641,11 +643,11 @@ class ReplayCLIUsage(CLIUsage):
 
         Parameters
         ----------
-        action : Action
-            The underlying sdk.Action object.
+        action : ReplayUsageAction
+            The object representing the Action we are replaying.
         inputs : UsageInputs
             Mapping of parameter names to arguments for the action.
-        outputs : UsageOutputNames
+        outputs : ReplayUsageOutputNames
             Mapping of registered output names to usage variable names.
 
         Returns
@@ -653,6 +655,27 @@ class ReplayCLIUsage(CLIUsage):
         UsageOutputs
             The results returned by the action.
         '''
+        plugin_name = q2cli.util.to_cli_name(action.plugin_id)
+        action_name = q2cli.util.to_cli_name(action.action_id)
+        self.recorder.append('qiime %s %s \\' % (plugin_name, action_name))
+
+        if action.node.action_present:
+            variables = self._action_found(
+                plugin_name, action_name, action, inputs, outputs
+            )
+        else:
+            variables = self._action_not_found(
+                plugin_name, action_name, action, inputs, outputs
+            )
+
+        return variables
+
+    def _action_found(
+        self, plugin_name: str, action_name: str,
+        action: ReplayUsageAction,
+        inputs: UsageInputs,
+        outputs: UsageOutputs
+    ):
         variables = Usage.action(self, action, inputs, outputs)
         vars_dict = variables._asdict()
 
@@ -668,11 +691,6 @@ class ReplayCLIUsage(CLIUsage):
                 # Otherwise, we should add filler values to missing_outputs
                 missing_outputs[output] = f'XX_{output}'
 
-        plugin_name = q2cli.util.to_cli_name(action.plugin_id)
-        action_name = q2cli.util.to_cli_name(action.action_id)
-        self.recorder.append('qiime %s %s \\' % (plugin_name, action_name))
-
-        action_f = action.get_action()
         action_state = get_action_state(action_f)
 
         ins = inputs.map_variables(lambda v: v.to_interface_name())
@@ -697,6 +715,36 @@ class ReplayCLIUsage(CLIUsage):
         self.recorder[-1] = self.recorder[-1][:-2]  # remove trailing `\`
 
         self.recorder.append('')
+        return variables
+
+    def _action_not_found(
+        self, plugin_name: str, action_name: str,
+        action: ReplayUsageAction,
+        inputs: UsageInputs,
+        outputs: UsageOutputs
+    ):
+        variables = Usage.action_not_present(self, action, inputs, outputs)
+        vars_dict = variables._asdict()
+
+        ins = inputs.map_variables(lambda v: v.to_interface_name())
+
+        self.recorder.append(
+            '# FIXME: The following action was not found in your current\n'
+            '# QIIME 2 environment. Please ensure the action is correct\n'
+            '# before running.')
+        for param_name, value in ins.items():
+            self._append_action_line({}, param_name, value)
+
+        dir_name = self._build_output_dir_name(plugin_name, action_name)
+        self.recorder.append(
+            self.INDENT + '--output-dir %s \\' % (dir_name)
+        )
+        self._rename_outputs(vars_dict, dir_name)
+
+        self.recorder[-1] = self.recorder[-1][:-2]  # remove trailing `\`
+
+        self.recorder.append('')
+
         return variables
 
     def render(self, flush=False):
