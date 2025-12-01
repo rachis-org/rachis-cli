@@ -19,7 +19,6 @@ import qiime2.sdk.usage as usage
 from qiime2.sdk.usage import (
     UsageVariable, Usage, UsageInputs, UsageOutputs
 )
-from qiime2.sdk import Action
 from qiime2.core.archive.provenance_lib.usage_drivers import (
     build_header, build_footer, ReplayUsageAction
 )
@@ -509,10 +508,14 @@ class ReplayCLIUsage(CLIUsage):
                 'match the version used in the original analysis.\n  # '
                 'Please see the docs and correct the parameter name '
                 'before running.\n')
-            cli_name = re.sub('_', '-', param_name)
-            line += self.INDENT + '--?-' + cli_name + ' ' + str(value)
-            line += ' \\'
-            self.recorder.append(line)
+            self._append_unknown_param(param_name, value)
+
+    def _append_unknown_param(self, param_name, value):
+        line = ''
+        cli_name = re.sub('_', '-', param_name)
+        line += self.INDENT + '--?-' + cli_name + ' ' + str(value)
+        line += ' \\'
+        self.recorder.append(line)
 
     def _make_param(self, value: Any, state: Dict) -> List[Tuple]:
         '''
@@ -657,7 +660,6 @@ class ReplayCLIUsage(CLIUsage):
         '''
         plugin_name = q2cli.util.to_cli_name(action.plugin_id)
         action_name = q2cli.util.to_cli_name(action.action_id)
-        self.recorder.append('qiime %s %s \\' % (plugin_name, action_name))
 
         if action.node.action_present:
             variables = self._action_found(
@@ -676,6 +678,8 @@ class ReplayCLIUsage(CLIUsage):
         inputs: UsageInputs,
         outputs: UsageOutputs
     ):
+        self.recorder.append('qiime %s %s \\' % (plugin_name, action_name))
+
         variables = Usage.action(self, action, inputs, outputs)
         vars_dict = variables._asdict()
 
@@ -730,10 +734,12 @@ class ReplayCLIUsage(CLIUsage):
 
         self.recorder.append(
             '# FIXME: The following action was not found in your current\n'
-            '# QIIME 2 environment. Please ensure the action is correct\n'
-            '# before running.')
+            '# QIIME 2 environment. Please ensure the action and its\n'
+            '# parameters are correct before running.')
+        self.recorder.append('qiime %s %s \\' % (plugin_name, action_name))
+
         for param_name, value in ins.items():
-            self._append_action_line({}, param_name, value)
+            self._append_unknown_param(param_name, value)
 
         dir_name = self._build_output_dir_name(plugin_name, action_name)
         self.recorder.append(
