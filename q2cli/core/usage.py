@@ -733,9 +733,10 @@ class ReplayCLIUsage(CLIUsage):
         ins = inputs.map_variables(lambda v: v.to_interface_name())
 
         self.recorder.append(
-            '# FIXME: The following action was not found in your current\n'
-            '# QIIME 2 environment. Please ensure the action and its\n'
-            '# parameters are correct before running.')
+            '# FIXME: The following action was not found in your current '
+            'QIIME 2\n# environment. Please ensure the action and its '
+            'parameters are correct before\n# running.'
+        )
         self.recorder.append('qiime %s %s \\' % (plugin_name, action_name))
 
         for param_name, value in ins.items():
