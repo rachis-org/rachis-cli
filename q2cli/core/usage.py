@@ -727,7 +727,7 @@ class ReplayCLIUsage(CLIUsage):
         inputs: UsageInputs,
         outputs: UsageOutputs
     ):
-        variables = Usage.action_not_present(self, action, inputs, outputs)
+        variables = Usage.action_not_found(self, action, inputs, outputs)
         vars_dict = variables._asdict()
 
         ins = inputs.map_variables(lambda v: v.to_interface_name())
