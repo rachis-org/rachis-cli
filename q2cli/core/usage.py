@@ -508,6 +508,7 @@ class ReplayCLIUsage(CLIUsage):
                 'match the version used in the original analysis.\n  # '
                 'Please see the docs and correct the parameter name '
                 'before running.\n')
+            self.recorder.append(line)
             self._append_unknown_param(param_name, value)
 
     def _append_unknown_param(self, param_name, value):
