@@ -1277,7 +1277,7 @@ class TestReplay(unittest.TestCase):
 
             self.assertEqual(os.listdir(unzipped_path), ['supplement'])
 
-    def test_replay_not_found(self):
+    def test_replay_action_not_found(self):
         datadir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'data'
         )
