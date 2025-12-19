@@ -1370,8 +1370,7 @@ qiime diversity core-metrics-phylogenetic \\
   --?-table feature-table-frequency-0.qza \\
   --?-phylogeny phylogeny-rooted-0.qza \\
   --?-sampling-depth 13 \\
-  --?-metadata <        print(rendered)
-your metadata filepath>.tsv \\
+  --?-metadata <your metadata filepath>.tsv \\
   --?-with-replacement False \\
   --?-n-jobs-or-threads 1 \\
   --?-ignore-missing-samples False \\
