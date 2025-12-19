@@ -1327,7 +1327,6 @@ class TestReplay(unittest.TestCase):
   # Please see the docs and correct the parameter name before running.
   --?-not real \\
 """  # noqa: E128
-
         self.assertIn(MISSING_PARAM, rendered)
 
     def test_replay_action_not_found(self):
@@ -1348,7 +1347,7 @@ class TestReplay(unittest.TestCase):
             with open(out_fp, 'r') as fh:
                 rendered = fh.read()
 
-            imports = \
+        imports = \
 """
 qiime tools import \\
   --type 'Phylogeny[Rooted]' \\
@@ -1360,9 +1359,9 @@ qiime tools import \\
   --input-path <your data here> \\
   --output-path feature-table-frequency-0.qza
 """  # noqa: E128
-            self.assertIn(imports, rendered)
+        self.assertIn(imports, rendered)
 
-            FIXME_action = \
+        FIXME_action = \
 """
 # FIXME: The following action was not found in your current QIIME 2
 # environment. Please ensure the action and its parameters are correct before
@@ -1371,13 +1370,14 @@ qiime diversity core-metrics-phylogenetic \\
   --?-table feature-table-frequency-0.qza \\
   --?-phylogeny phylogeny-rooted-0.qza \\
   --?-sampling-depth 13 \\
-  --?-metadata <your metadata filepath>.tsv \\
+  --?-metadata <        print(rendered)
+your metadata filepath>.tsv \\
   --?-with-replacement False \\
   --?-n-jobs-or-threads 1 \\
   --?-ignore-missing-samples False \\
   --output-dir diversity-core-metrics-phylogenetic
 """  # noqa: E128
-            self.assertIn(FIXME_action, rendered)
+        self.assertIn(FIXME_action, rendered)
 
 
 class TestAnnotations(unittest.TestCase):
