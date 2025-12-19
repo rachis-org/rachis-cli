@@ -507,7 +507,7 @@ class ReplayCLIUsage(CLIUsage):
                 'when the plugin version you have\n  # installed does not '
                 'match the version used in the original analysis.\n  # '
                 'Please see the docs and correct the parameter name '
-                'before running.\n')
+                'before running.')
             self.recorder.append(line)
             self._append_unknown_param(param_name, value)
 
