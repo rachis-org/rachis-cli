@@ -9,6 +9,8 @@
 import os
 import gc
 import re
+import yaml
+import pytest
 import shutil
 import unittest
 from unittest.mock import patch
@@ -1276,6 +1278,105 @@ class TestReplay(unittest.TestCase):
                 zfh.extractall(unzipped_path)
 
             self.assertEqual(os.listdir(unzipped_path), ['supplement'])
+
+    # Leave me alone I know the checksums don't match
+    @pytest.mark.filterwarnings('ignore::UserWarning')
+    def test_replay_param_not_found(self):
+        qiime_cli = RootCommand()
+        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+
+        in_fp = os.path.join(self.tempdir, 'concated_ints.qza')
+        left_path = os.path.join(self.tempdir, 'left.qza')
+        right_path = os.path.join(self.tempdir, 'right.qza')
+
+        result = self.runner.invoke(
+            command, ['split-ints', '--i-ints', in_fp,
+                      '--o-left', left_path, '--o-right', right_path,
+                      '--verbose'])
+
+        self.assertEqual(result.exit_code, 0)
+
+        left = Artifact.load(left_path)
+        action_fp = os.path.join(
+            left._archiver.provenance_dir, 'action', 'action.yaml'
+        )
+        with open(action_fp, 'r+') as action_fh:
+            action_string = action_fh.read()
+            action_yaml = yaml.safe_load(action_string)
+            action_yaml['action']['parameters'].append({'not': 'real'})
+
+            action_fh.write(yaml.dump(action_yaml))
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_fp = os.path.join(tmpdir, 'rendered.txt')
+            result = self.runner.invoke(
+                tools,
+                ['replay-provenance', '--in-fp', left_path, '--out-fp',
+                 out_fp, '--no-dump-recorded-metadata']
+            )
+            self.assertEqual(result.exit_code, 0)
+
+            with open(out_fp, 'r') as fh:
+                rendered = fh.read()
+
+        MISSING_PARAM = \
+"""
+  # FIXME: The following parameter name was not found in your current
+  # QIIME 2 environment. This may occur when the plugin version you have
+  # installed does not match the version used in the original analysis.
+  # Please see the docs and correct the parameter name before running.
+  --?-not real \\
+"""  # noqa: E128
+        self.assertIn(MISSING_PARAM, rendered)
+
+    def test_replay_action_not_found(self):
+        datadir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'data'
+        )
+        artifact_fp = os.path.join(datadir, 'rarefied_table.qza')
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_fp = os.path.join(tmpdir, 'rendered.txt')
+            result = self.runner.invoke(
+                tools,
+                ['replay-provenance', '--in-fp', artifact_fp, '--out-fp',
+                 out_fp, '--no-dump-recorded-metadata']
+            )
+            self.assertEqual(result.exit_code, 0)
+
+            with open(out_fp, 'r') as fh:
+                rendered = fh.read()
+
+        imports = \
+"""
+qiime tools import \\
+  --type 'Phylogeny[Rooted]' \\
+  --input-path <your data here> \\
+  --output-path phylogeny-rooted-0.qza
+
+qiime tools import \\
+  --type 'FeatureTable[Frequency]' \\
+  --input-path <your data here> \\
+  --output-path feature-table-frequency-0.qza
+"""  # noqa: E128
+        self.assertIn(imports, rendered)
+
+        FIXME_action = \
+"""
+# FIXME: The following action was not found in your current QIIME 2
+# environment. Please ensure the action and its parameters are correct before
+# running.
+qiime diversity core-metrics-phylogenetic \\
+  --?-table feature-table-frequency-0.qza \\
+  --?-phylogeny phylogeny-rooted-0.qza \\
+  --?-sampling-depth 13 \\
+  --?-metadata <your metadata filepath>.tsv \\
+  --?-with-replacement False \\
+  --?-n-jobs-or-threads 1 \\
+  --?-ignore-missing-samples False \\
+  --output-dir diversity-core-metrics-phylogenetic
+"""  # noqa: E128
+        self.assertIn(FIXME_action, rendered)
 
 
 class TestAnnotations(unittest.TestCase):
