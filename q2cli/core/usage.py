@@ -662,7 +662,7 @@ class ReplayCLIUsage(CLIUsage):
         plugin_name = q2cli.util.to_cli_name(action.plugin_id)
         action_name = q2cli.util.to_cli_name(action.action_id)
 
-        if action.node.action_present:
+        if action.node._action_present_:
             variables = self._action_found(
                 plugin_name, action_name, action, inputs, outputs
             )
