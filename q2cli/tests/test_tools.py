@@ -592,7 +592,7 @@ class TestCacheTools(unittest.TestCase):
         self.cache.save(self.art1, 'key3')
 
         keys = self.cache.get_keys()
-        self.assertEqual(set(['key1', 'key2', 'key3']), keys)
+        self.assertEqual(['key1', 'key2', 'key3'], keys)
 
         result = self.runner.invoke(
             tools,
