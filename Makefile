@@ -1,4 +1,4 @@
-.PHONY: all lint test init-view-submodule vendor-view install dev clean distclean
+.PHONY: all lint test init-view-submodule vendor-view install dev dev-no-view clean distclean
 
 PYTHON ?= python
 PREFIX ?= $(CONDA_PREFIX)
