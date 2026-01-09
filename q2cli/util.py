@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import contextlib
+
 
 class OutOfDisk(Exception):
     pass
@@ -531,3 +533,45 @@ def get_default_recycle_pool(plugin_action):
 
     return f'recycle_{plugin_action}_' \
            f'{sha1(plugin_action.encode("utf-8")).hexdigest()}'
+
+
+@contextlib.contextmanager
+def filter_QIIME2_warnings():
+    import sys
+    import warnings
+    from qiime2.core.exceptions import QIIME2Warning
+
+    original_showwarning = warnings.showwarning
+
+    captured_warnings = []
+
+    def save_warnings(
+        message, category, filename, lineno, file=None, line=None
+    ):
+        """
+        Overrides the default warnings.showwarning in order to display
+        warnings of category QIIME2Warning.
+        """
+
+        if issubclass(category, QIIME2Warning):
+            captured_warnings.append((str(message), filename, lineno))
+        else:
+            original_showwarning(
+                message, category, filename, lineno, file, line
+            )
+
+    warnings.showwarning = save_warnings
+
+    yield
+
+    if captured_warnings:
+        sys.stderr.write('\033[33m')  # yellow
+        sys.stderr.write('\nQIIME2 WARNING(S):\n\n')
+        for warning, file, line in captured_warnings:
+            sys.stderr.write(f'{warning}\n')
+            sys.stderr.write(f'[{file}: {line}]\n\n')
+
+        sys.stderr.flush()
+        sys.stderr.write('\033[0m')  # reset to original color
+
+    warnings.showwarning = original_showwarning
