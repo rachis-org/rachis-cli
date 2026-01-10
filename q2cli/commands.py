@@ -548,26 +548,26 @@ class ActionCommand(BaseCommandMixin, click.Command):
 
         cleanup_logfile = False
         try:
-            with filter_QIIME2_warnings():
-                with qiime2.util.redirected_stdio(stdout=log, stderr=log):
-                    if parallel:
-                        from qiime2.sdk.parallel_config import \
-                            (load_config_from_file, ParallelConfig)
+            with (qiime2.util.redirected_stdio(stdout=log, stderr=log),
+                 filter_QIIME2_warnings()):
+                if parallel:
+                    from qiime2.sdk.parallel_config import \
+                        (load_config_from_file, ParallelConfig)
 
-                        action = action.parallel
-                        if parallel_config_fp is None:
-                            parallel_config = ParallelConfig()
-                        else:
-                            config, mapping = \
-                                load_config_from_file(parallel_config_fp)
-                            parallel_config = ParallelConfig(config, mapping)
-
-                        with parallel_config:
-                            results = self._execute_action(
-                                action, arguments, cache, recycle_pool)
+                    action = action.parallel
+                    if parallel_config_fp is None:
+                        parallel_config = ParallelConfig()
                     else:
+                        config, mapping = \
+                            load_config_from_file(parallel_config_fp)
+                        parallel_config = ParallelConfig(config, mapping)
+
+                    with parallel_config:
                         results = self._execute_action(
                             action, arguments, cache, recycle_pool)
+                else:
+                    results = self._execute_action(
+                        action, arguments, cache, recycle_pool)
         except Exception as e:
             header = ('Plugin error from %s:'
                       % q2cli.util.to_cli_name(self.plugin['name']))
