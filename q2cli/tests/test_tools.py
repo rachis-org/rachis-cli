@@ -1347,19 +1347,24 @@ class TestReplay(unittest.TestCase):
             with open(out_fp, 'r') as fh:
                 rendered = fh.read()
 
-        imports = \
+        import1 = \
 """
 qiime tools import \\
   --type 'Phylogeny[Rooted]' \\
   --input-path <your data here> \\
   --output-path phylogeny-rooted-0.qza
+"""  # noqa: E128
 
+        import2 = \
+"""
 qiime tools import \\
   --type 'FeatureTable[Frequency]' \\
   --input-path <your data here> \\
   --output-path feature-table-frequency-0.qza
 """  # noqa: E128
-        self.assertIn(imports, rendered)
+
+        self.assertIn(import1, rendered)
+        self.assertIn(import2, rendered)
 
         FIXME_action = \
 """
