@@ -587,12 +587,12 @@ class TestCacheTools(unittest.TestCase):
         self.assertFalse('key' in self.cache.get_keys())
 
     def test_cache_remove_multiple(self):
-        self.cache.save(self.art1, 'key1')
-        self.cache.save(self.art1, 'key2')
         self.cache.save(self.art1, 'key3')
+        self.cache.save(self.art1, 'key2')
+        self.cache.save(self.art1, 'key1')
 
         keys = self.cache.get_keys()
-        self.assertEqual(set(['key1', 'key2', 'key3']), keys)
+        self.assertEqual(['key1', 'key2', 'key3'], keys)
 
         result = self.runner.invoke(
             tools,
