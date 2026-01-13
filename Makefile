@@ -1,4 +1,4 @@
-.PHONY: all lint test init-view-submodule vendor-view install dev clean distclean
+.PHONY: all lint test init-view-submodule vendor-view install dev dev-no-view clean distclean
 
 PYTHON ?= python
 PREFIX ?= $(CONDA_PREFIX)
@@ -28,7 +28,9 @@ install: vendor-view all
 	mkdir -p $(PREFIX)/etc/conda/activate.d && \
 	cp hooks/50_activate_q2cli_tab_completion.sh $(PREFIX)/etc/conda/activate.d/
 
-dev: vendor-view all
+dev: dev-no-view vendor-view all
+
+dev-no-view: all
 	pip install -e . && \
 	mkdir -p $(PREFIX)/etc/conda/activate.d && \
 	cp hooks/50_activate_q2cli_tab_completion.sh $(PREFIX)/etc/conda/activate.d/
