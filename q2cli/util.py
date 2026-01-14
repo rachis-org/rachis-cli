@@ -536,10 +536,10 @@ def get_default_recycle_pool(plugin_action):
 
 
 @contextlib.contextmanager
-def filter_QIIME2_warnings():
+def filter_rachis_warnings():
     import sys
     import warnings
-    from qiime2.core.exceptions import QIIME2Warning
+    from qiime2.core.exceptions import RachisWarning
 
     original_showwarning = warnings.showwarning
 
@@ -553,7 +553,7 @@ def filter_QIIME2_warnings():
         warnings of category QIIME2Warning.
         """
 
-        if issubclass(category, QIIME2Warning):
+        if issubclass(category, RachisWarning):
             captured_warnings.append((str(message), filename, lineno))
         else:
             original_showwarning(

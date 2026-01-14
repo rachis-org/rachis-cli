@@ -14,7 +14,7 @@ import q2cli.builtin.tools
 
 from q2cli.click.command import BaseCommandMixin
 from q2cli.core.config import CONFIG
-from q2cli.util import filter_QIIME2_warnings
+from q2cli.util import filter_rachis_warnings
 
 
 class RootCommand(BaseCommandMixin, click.MultiCommand):
@@ -549,7 +549,7 @@ class ActionCommand(BaseCommandMixin, click.Command):
         cleanup_logfile = False
         try:
             with (qiime2.util.redirected_stdio(stdout=log, stderr=log),
-                 filter_QIIME2_warnings()):
+                 filter_rachis_warnings()):
                 if parallel:
                     from qiime2.sdk.parallel_config import \
                         (load_config_from_file, ParallelConfig)
