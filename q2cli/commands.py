@@ -14,7 +14,7 @@ import q2cli.builtin.tools
 
 from q2cli.click.command import BaseCommandMixin
 from q2cli.core.config import CONFIG
-from q2cli.util import filter_QIIME2_warnings
+from q2cli.util import capture_rachis_warnings
 
 
 class RootCommand(BaseCommandMixin, click.MultiCommand):
@@ -406,6 +406,7 @@ class ActionCommand(BaseCommandMixin, click.Command):
         """Called when user hits return, **kwargs are Dict[click_names, Obj]"""
         import os
         import click
+        from contextlib import nullcontext
 
         import qiime2.util
         from qiime2.core.cache import Cache
@@ -548,8 +549,10 @@ class ActionCommand(BaseCommandMixin, click.Command):
 
         cleanup_logfile = False
         try:
-            with (qiime2.util.redirected_stdio(stdout=log, stderr=log),
-                 filter_QIIME2_warnings()):
+            with (
+                capture_rachis_warnings() if not quiet else nullcontext(),
+                qiime2.util.redirected_stdio(stdout=log, stderr=log)
+            ):
                 if parallel:
                     from qiime2.sdk.parallel_config import \
                         (load_config_from_file, ParallelConfig)

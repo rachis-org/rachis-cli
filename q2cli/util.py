@@ -536,42 +536,42 @@ def get_default_recycle_pool(plugin_action):
 
 
 @contextlib.contextmanager
-def filter_QIIME2_warnings():
+def capture_rachis_warnings():
+    '''
+    Intercepts `RachisWarning` warnings and delays writing them to standard
+    error until the context is exited. This is useful if the standard error
+    stream is temporarily redirected at some point within this context manager.
+    '''
     import sys
     import warnings
-    from qiime2.core.exceptions import QIIME2Warning
-
-    original_showwarning = warnings.showwarning
+    from qiime2.core.exceptions import RachisWarning
 
     captured_warnings = []
 
-    def save_warnings(
+    warnings_showwarning = warnings.showwarning
+
+    def _capture_showwarning(
         message, category, filename, lineno, file=None, line=None
     ):
-        """
-        Overrides the default warnings.showwarning in order to display
-        warnings of category QIIME2Warning.
-        """
-
-        if issubclass(category, QIIME2Warning):
+        if issubclass(category, RachisWarning):
             captured_warnings.append((str(message), filename, lineno))
         else:
-            original_showwarning(
+            warnings_showwarning(
                 message, category, filename, lineno, file, line
             )
 
-    warnings.showwarning = save_warnings
+    warnings.showwarning = _capture_showwarning
 
     yield
 
     if captured_warnings:
-        sys.stderr.write('\033[33m')  # yellow
-        sys.stderr.write('\nQIIME2 WARNING(S):\n\n')
+        sys.stderr.write('\033[33m')  # yellow text
+        sys.stderr.write('\nRACHIS WARNING(S):\n\n')
         for warning, file, line in captured_warnings:
             sys.stderr.write(f'{warning}\n')
             sys.stderr.write(f'[{file}: {line}]\n\n')
 
+        sys.stderr.write('\033[0m')  # reset text color
         sys.stderr.flush()
-        sys.stderr.write('\033[0m')  # reset to original color
 
-    warnings.showwarning = original_showwarning
+    warnings.showwarning = warnings_showwarning
