@@ -549,10 +549,15 @@ class ActionCommand(BaseCommandMixin, click.Command):
 
         cleanup_logfile = False
         try:
+<<<<<<< HEAD
             with (
                 capture_rachis_warnings() if not quiet else nullcontext(),
                 qiime2.util.redirected_stdio(stdout=log, stderr=log)
             ):
+=======
+            with (qiime2.util.redirected_stdio(stdout=log, stderr=log),
+                 filter_rachis_warnings()):
+>>>>>>> macabe/warning-filters
                 if parallel:
                     from qiime2.sdk.parallel_config import \
                         (load_config_from_file, ParallelConfig)
