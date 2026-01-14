@@ -6,14 +6,16 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os.path
-import unittest
-import contextlib
-import unittest.mock
-import tempfile
-import shutil
 import click
+import contextlib
 import errno
+import os.path
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import unittest
+import unittest.mock
 
 from click.testing import CliRunner
 from qiime2.core.cache import get_cache
@@ -483,6 +485,36 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(result.output, EXPECTED_CITATIONS)
+
+    def test_rachis_warning_is_always_visible(self):
+        '''
+        Tests that the `RachisWarning` warning type gets passed to the standard
+        error stream even when --verbose is not set. Also ensures that such
+        errors are still visible with --verbose, and not visible with --quiet.
+        '''
+        with tempfile.TemporaryDirectory() as tempdir:
+            base_command = [
+                'qiime', 'dummy-plugin', 'raises-rachis-warning', '--o-output',
+                Path(tempdir) / 'output.qza'
+            ]
+
+            # no verbose, no quiet
+            output = subprocess.run(
+                base_command, capture_output=True, text=True
+            )
+            self.assertIn('This is an important warning', output.stderr)
+
+            # verbose
+            output = subprocess.run(
+                base_command + ['--verbose'], capture_output=True, text=True
+            )
+            self.assertIn('This is an important warning', output.stderr)
+
+            # quiet
+            output = subprocess.run(
+                base_command + ['--quiet'], capture_output=True, text=True
+            )
+            self.assertNotIn('This is an important warning', output.stderr)
 
 
 class TestMigrated(unittest.TestCase):
