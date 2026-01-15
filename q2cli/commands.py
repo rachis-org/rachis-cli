@@ -405,13 +405,16 @@ class ActionCommand(BaseCommandMixin, click.Command):
         """Called when user hits return, **kwargs are Dict[click_names, Obj]"""
         import os
         import click
+        from contextlib import nullcontext
 
         import qiime2.util
         from qiime2.core.cache import Cache
         from qiime2.sdk import ResultCollection
 
-        from q2cli.util import (output_in_cache, _get_cache_path_and_key,
-                                get_default_recycle_pool)
+        from q2cli.util import (
+            output_in_cache, _get_cache_path_and_key, get_default_recycle_pool,
+            capture_rachis_warnings
+        )
         from q2cli.core.artifact_cache_global import (
             get_used_artifact_cache, unset_used_artifact_cache)
 
@@ -547,7 +550,10 @@ class ActionCommand(BaseCommandMixin, click.Command):
 
         cleanup_logfile = False
         try:
-            with qiime2.util.redirected_stdio(stdout=log, stderr=log):
+            with (
+                capture_rachis_warnings() if not quiet else nullcontext(),
+                qiime2.util.redirected_stdio(stdout=log, stderr=log)
+            ):
                 if parallel:
                     from qiime2.sdk.parallel_config import \
                         (load_config_from_file, ParallelConfig)
@@ -557,7 +563,7 @@ class ActionCommand(BaseCommandMixin, click.Command):
                         parallel_config = ParallelConfig()
                     else:
                         config, mapping = \
-                              load_config_from_file(parallel_config_fp)
+                            load_config_from_file(parallel_config_fp)
                         parallel_config = ParallelConfig(config, mapping)
 
                     with parallel_config:

@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import contextlib
+
 
 class OutOfDisk(Exception):
     pass
@@ -531,3 +533,45 @@ def get_default_recycle_pool(plugin_action):
 
     return f'recycle_{plugin_action}_' \
            f'{sha1(plugin_action.encode("utf-8")).hexdigest()}'
+
+
+@contextlib.contextmanager
+def capture_rachis_warnings():
+    '''
+    Intercepts `RachisWarning` warnings and delays writing them to standard
+    error until the context is exited. This is useful if the standard error
+    stream is temporarily redirected at some point within this context manager.
+    '''
+    import sys
+    import warnings
+    from qiime2.core.exceptions import RachisWarning
+
+    captured_warnings = []
+
+    warnings_showwarning = warnings.showwarning
+
+    def _capture_showwarning(
+        message, category, filename, lineno, file=None, line=None
+    ):
+        if issubclass(category, RachisWarning):
+            captured_warnings.append((str(message), filename, lineno))
+        else:
+            warnings_showwarning(
+                message, category, filename, lineno, file, line
+            )
+
+    warnings.showwarning = _capture_showwarning
+
+    yield
+
+    if captured_warnings:
+        sys.stderr.write('\033[33m')  # yellow text
+        sys.stderr.write('\nRACHIS WARNING(S):\n\n')
+        for warning, file, line in captured_warnings:
+            sys.stderr.write(f'{warning}\n')
+            sys.stderr.write(f'[{file}: {line}]\n\n')
+
+        sys.stderr.write('\033[0m')  # reset text color
+        sys.stderr.flush()
+
+    warnings.showwarning = warnings_showwarning
