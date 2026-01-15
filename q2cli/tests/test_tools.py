@@ -587,12 +587,12 @@ class TestCacheTools(unittest.TestCase):
         self.assertFalse('key' in self.cache.get_keys())
 
     def test_cache_remove_multiple(self):
-        self.cache.save(self.art1, 'key1')
-        self.cache.save(self.art1, 'key2')
         self.cache.save(self.art1, 'key3')
+        self.cache.save(self.art1, 'key2')
+        self.cache.save(self.art1, 'key1')
 
         keys = self.cache.get_keys()
-        self.assertEqual(set(['key1', 'key2', 'key3']), keys)
+        self.assertEqual(['key1', 'key2', 'key3'], keys)
 
         result = self.runner.invoke(
             tools,
@@ -1347,19 +1347,24 @@ class TestReplay(unittest.TestCase):
             with open(out_fp, 'r') as fh:
                 rendered = fh.read()
 
-        imports = \
+        import1 = \
 """
 qiime tools import \\
   --type 'Phylogeny[Rooted]' \\
   --input-path <your data here> \\
   --output-path phylogeny-rooted-0.qza
+"""  # noqa: E128
 
+        import2 = \
+"""
 qiime tools import \\
   --type 'FeatureTable[Frequency]' \\
   --input-path <your data here> \\
   --output-path feature-table-frequency-0.qza
 """  # noqa: E128
-        self.assertIn(imports, rendered)
+
+        self.assertIn(import1, rendered)
+        self.assertIn(import2, rendered)
 
         FIXME_action = \
 """
