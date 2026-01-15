@@ -14,7 +14,6 @@ import q2cli.builtin.tools
 
 from q2cli.click.command import BaseCommandMixin
 from q2cli.core.config import CONFIG
-from q2cli.util import capture_rachis_warnings
 
 
 class RootCommand(BaseCommandMixin, click.MultiCommand):
@@ -412,8 +411,10 @@ class ActionCommand(BaseCommandMixin, click.Command):
         from qiime2.core.cache import Cache
         from qiime2.sdk import ResultCollection
 
-        from q2cli.util import (output_in_cache, _get_cache_path_and_key,
-                                get_default_recycle_pool)
+        from q2cli.util import (
+            output_in_cache, _get_cache_path_and_key, get_default_recycle_pool,
+            capture_rachis_warnings
+        )
         from q2cli.core.artifact_cache_global import (
             get_used_artifact_cache, unset_used_artifact_cache)
 
