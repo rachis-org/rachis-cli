@@ -24,16 +24,12 @@ mystery-stew: all
 	MYSTERY_STEW= pytest -k mystery_stew -n auto
 
 install: vendor-view all
-	$(PYTHON) -m pip install -v . && \
-	mkdir -p $(PREFIX)/etc/conda/activate.d && \
-	cp hooks/50_activate_q2cli_tab_completion.sh $(PREFIX)/etc/conda/activate.d/
+	$(PYTHON) -m pip install -v .
 
 dev: dev-no-view vendor-view all
 
 dev-no-view: all
-	pip install -e . && \
-	mkdir -p $(PREFIX)/etc/conda/activate.d && \
-	cp hooks/50_activate_q2cli_tab_completion.sh $(PREFIX)/etc/conda/activate.d/
+	pip install -e .
 
 clean: distclean
 	rm -rf ./q2cli/assets
