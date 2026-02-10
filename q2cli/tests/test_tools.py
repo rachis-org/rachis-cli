@@ -1076,7 +1076,7 @@ class TestReplay(unittest.TestCase):
         with open(out_fp, 'r') as fh:
             rendered = fh.read()
 
-        self.assertIn('from qiime2 import Artifact', rendered)
+        self.assertIn('from rachis import Artifact', rendered)
         self.assertIn('Artifact.import_data', rendered)
         self.assertIn('dummy_plugin_actions.concatenate_ints', rendered)
 
@@ -1144,7 +1144,7 @@ class TestReplay(unittest.TestCase):
         # use .*? to non-greedily match version strings
         exp = [
             r'action\|dummy-plugin:.*?\|method:concatenate_ints\|0',
-            r'framework\|qiime2:.*?\|0',
+            r'framework\|rachis:.*?\|0',
             r'plugin\|dummy-plugin:.*?\|0',
             r'plugin\|dummy-plugin:.*?\|1',
             r'transformer\|dummy-plugin:.*?\|builtins:list->'
@@ -1185,7 +1185,7 @@ class TestReplay(unittest.TestCase):
         with open(out_fp) as fh:
             file_contents = fh.read()
         framework_citations = \
-            re.compile(r'framework\|qiime2:.*?\|0.*' * 4, re.DOTALL)
+            re.compile(r'framework\|rachis:.*?\|0.*' * 4, re.DOTALL)
         self.assertRegex(file_contents, framework_citations)
 
     def test_replay_supplement(self):
