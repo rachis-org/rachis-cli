@@ -2009,7 +2009,6 @@ class TestMakeReport(unittest.TestCase):
         report = os.path.join(self.tempdir, 'report.qzv')
         result = self.runner.invoke(
             tools, ['make-report', dup1, dup2, '--report-path', report])
-
         self.assertNotEqual(result.exit_code, 0)
         self.assertIn('Multiple files share the same name', result.output)
 
