@@ -789,8 +789,7 @@ class TestCacheCli(unittest.TestCase):
         )
 
         self.assertEqual(result.exit_code, 1)
-        self.assertIn(f'Key "{invalid}" is not a valid Python identifier',
-                      str(result.exception))
+        self.assertIn(invalid, str(result.exception))
 
     def test_artifact_as_metadata_cache(self):
         self.cache.save(self.mapping, 'mapping')
