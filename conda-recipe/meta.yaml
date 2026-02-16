@@ -9,12 +9,12 @@ build:
   - qiime=q2cli.__main__:qiime
 requirements:
   host:
-  - python  {{ python }}
+  - python {{ python }}
   - setuptools
   - versioningit
   - wheel
   run:
-  - python  {{ python }}
+  - python {{ python }}
   - setuptools
   - click {{ click }}
   - qiime2 >={{ qiime2 }}
@@ -33,8 +33,8 @@ test:
   imports:
   - q2cli
   commands:
-  - QIIMETEST= qiime --help
-  - QIIMETEST= py.test --pyargs q2cli
+  - Q2CLIDEV=1 QIIMETEST= qiime --help
+  - Q2CLIDEV=1 QIIMETEST= py.test --pyargs q2cli
 about:
   home: https://qiime2.org
   license: BSD-3-Clause
