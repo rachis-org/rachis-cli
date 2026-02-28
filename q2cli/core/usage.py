@@ -98,6 +98,7 @@ class CLIUsageVariable(usage.UsageVariable):
         if self.var_type not in ('format', 'column'):
             cli_name = self.to_cli_name(cli_name)
 
+        cli_name = shlex.quote(cli_name)
         return cli_name
 
     def assert_has_line_matching(self, path, expression, key=None):
