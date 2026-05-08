@@ -1020,6 +1020,13 @@ def cache_store(cache, artifact_path, key):
 def cache_import(type, input_path, cache, key, input_format, validate_level):
     from qiime2 import Cache
     from q2cli.core.config import CONFIG
+    from rachis.sdk.util import validate_result_collection_keys
+
+    # If the artifact takes a long time to import, we can waste all that time
+    # then explode on cache.save, better to validate the key twice once here
+    # and once in .save than import the entire artifact before exploding. Key
+    # validation is cheap.
+    validate_result_collection_keys(key)
 
     artifact = _import(type, input_path, input_format, validate_level)
     _cache = Cache(cache)
