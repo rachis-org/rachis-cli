@@ -969,6 +969,13 @@ def cache_store(cache, artifact_path, key):
     from qiime2.sdk.result import Result
     from qiime2.core.cache import Cache
     from q2cli.core.config import CONFIG
+    from rachis.sdk.util import validate_result_collection_keys
+
+    # If the Result takes a long time to load, we can waste all that time
+    # then explode on cache.save, better to validate the key twice once here
+    # and once in .save than load the entire Result before exploding. Key
+    # validation is cheap.
+    validate_result_collection_keys(key)
 
     try:
         artifact = Result.load(artifact_path)
@@ -1020,6 +1027,13 @@ def cache_store(cache, artifact_path, key):
 def cache_import(type, input_path, cache, key, input_format, validate_level):
     from qiime2 import Cache
     from q2cli.core.config import CONFIG
+    from rachis.sdk.util import validate_result_collection_keys
+
+    # If the Artifact takes a long time to import, we can waste all that time
+    # then explode on cache.save, better to validate the key twice once here
+    # and once in .save than import the entire Artifact before exploding. Key
+    # validation is cheap.
+    validate_result_collection_keys(key)
 
     artifact = _import(type, input_path, input_format, validate_level)
     _cache = Cache(cache)
