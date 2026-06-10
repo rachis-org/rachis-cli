@@ -17,6 +17,7 @@ from unittest.mock import patch
 import tempfile
 import zipfile
 import bibtexparser as bp
+from pathlib import Path
 
 from click.testing import CliRunner
 from qiime2 import Artifact, Metadata
@@ -1033,6 +1034,17 @@ class TestReplay(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
+
+    def test_replay_provenance_cache(self):
+        cache = Cache(os.path.join(self.tempdir, 'cache'))
+        int_seq1 = Artifact.import_data('IntSequence1', [1, 2, 3])
+        cache.save(int_seq1, 'int_seq1')
+        cache_fp = Path(self.tempdir) / 'cache:int_seq1'
+
+        self.runner.invoke(
+            tools,
+            ['replay-provenance', 'in-fp', cache_fp, '--out-fp', self.tempdir]
+        )
 
     def test_replay_provenance(self):
         in_fp = os.path.join(self.tempdir, 'concated_ints.qza')
