@@ -1269,6 +1269,7 @@ def provenance_replay(
     dump_recorded_metadata: bool = True,
     metadata_out_dir: str = ''
 ):
+    from q2cli.util import try_as_cache_input
     """
     Replay provenance from a QIIME 2 Artifact filepath to a written executable
     """
@@ -1286,6 +1287,11 @@ def provenance_replay(
             'current environment.'
         )
         raise ValueError(msg)
+
+    try:
+        in_fp = try_as_cache_input(in_fp)
+    except ValueError:
+        pass
 
     replay_provenance(
         usage_driver=usage_driver_type,
