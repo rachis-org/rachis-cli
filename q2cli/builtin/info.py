@@ -40,6 +40,7 @@ def _get_parsl_ver():
 
     return parsl_ver
 
+
 def _echo_plugins():
     import q2cli.core.cache
 
