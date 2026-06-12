@@ -1749,3 +1749,36 @@ def signature_verify(input_path, name):
     click.echo(CONFIG.cfg_style('success',
                                 f'Signature {name} on Result '
                                 f'{input_path} verified successfully.'))
+
+
+@tools.command(
+    name='redact-metadata',
+    short_help='Remove metadata from an artifact.',
+    help='Remove all metadata from an artifact and return the artifact '
+         'otherwise unchanged.'
+)
+@click.option(
+    '--input-path',
+    required=True,
+    help='The path to the artifact where you wish to remove the metadata.'
+)
+@click.option(
+    '--output-path',
+    required=True,
+    help='Path to save artifact with redacted metadata to.'
+)
+def redact_metadata(input_path, output_path):
+    from qiime2 import Artifact
+    from q2cli.core.config import CONFIG
+
+    artifact = Artifact.load(input_path)
+    artifact.redact_metadata()
+    artifact.save(output_path)
+
+    click.echo(
+        CONFIG.cfg_style(
+            'success',
+            f'Succesfully redacted metadata from {input_path}, and saved to '
+            f'{output_path}.'
+        )
+    )
