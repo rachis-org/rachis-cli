@@ -19,10 +19,26 @@ def _echo_version():
     pyver = sys.version_info
     click.echo('Python version: %d.%d.%d' %
                (pyver.major, pyver.minor, pyver.micro))
-    click.echo('QIIME 2 release: %s' % qiime2.__release__)
-    click.echo('QIIME 2 version: %s' % qiime2.__version__)
+    click.echo('Parsl version: %s' % _get_parsl_ver())
+    click.echo('rachis release: %s' % qiime2.__release__)
+    click.echo('rachis version: %s' % qiime2.__version__)
     click.echo('q2cli version: %s' % q2cli.__version__)
 
+
+def _get_parsl_ver():
+    import os
+    import pathlib
+
+    conda_env_prefix = os.environ.get('CONDA_PREFIX')
+    conda_meta_path = pathlib.Path(conda_env_prefix) / 'conda-meta'
+
+    parsl_ver = None
+    for file in conda_meta_path.iterdir():
+        if file.stem.startswith('parsl'):
+            # version is in the structure of: parsl-2026.2.23-pyhcf101f3_0
+            parsl_ver = file.stem.split('-', 2)[1]
+
+    return parsl_ver
 
 def _echo_plugins():
     import q2cli.core.cache
