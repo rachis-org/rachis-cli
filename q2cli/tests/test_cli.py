@@ -233,6 +233,43 @@ class CliTests(unittest.TestCase):
             '10', '--output-dir', output_dir, '--verbose'])
         self.assertEqual(result.exit_code, 0)
 
+    def test_bool_typemap_parameter_is_flag(self):
+        qiime_cli = RootCommand()
+        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+
+        results = self.runner.invoke(
+            command, ['bool-flag-swaps-output-method', '--help'])
+        self.assertEqual(results.exit_code, 0)
+        self.assertIn('--p-b / --p-no-b', results.output)
+
+        input_path = Artifact.import_data(
+            'Bar', 'element', view_type=str).save(
+                os.path.join(self.tempdir, 'bar.qza'))
+        true_output_path = os.path.join(self.tempdir, 'true-output.qza')
+        false_output_path = os.path.join(self.tempdir, 'false-output.qza')
+
+        result = self.runner.invoke(
+            command, [
+                'bool-flag-swaps-output-method',
+                '--i-a', input_path,
+                '--p-b',
+                '--o-x', true_output_path,
+                '--verbose'
+            ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(repr(Artifact.load(true_output_path).type), 'C1[Foo]')
+
+        result = self.runner.invoke(
+            command, [
+                'bool-flag-swaps-output-method',
+                '--i-a', input_path,
+                '--p-no-b',
+                '--o-x', false_output_path,
+                '--verbose'
+            ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(repr(Artifact.load(false_output_path).type), 'Foo')
+
     def test_execute_hidden_action(self):
         int_path = os.path.join(self.tempdir, 'int.qza')
         qiime_cli = RootCommand()
