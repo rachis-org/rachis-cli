@@ -1772,7 +1772,13 @@ def redact_metadata(input_path, output_path):
     from q2cli.core.config import CONFIG
 
     artifact = Artifact.load(input_path)
-    artifact._archiver.redact_metadata()
+
+    try:
+        artifact._archiver.redact_metadata()
+    except ValueError as e:
+        click.echo(CONFIG.cfg_style('error', str(e)), err=True)
+        raise click.Abort()
+
     artifact.save(output_path)
 
     click.echo(
