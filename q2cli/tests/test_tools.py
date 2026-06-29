@@ -31,6 +31,7 @@ from q2cli.util import load_metadata
 from q2cli.builtin.tools import tools
 from q2cli.commands import RootCommand
 from q2cli.core.usage import ReplayCLIUsage
+from rachis.sdk.result import Visualization
 
 
 class TestCastMetadata(unittest.TestCase):
@@ -2011,6 +2012,68 @@ class TestMakeReport(unittest.TestCase):
             tools, ['make-report', dup1, dup2, '--report-path', report])
         self.assertNotEqual(result.exit_code, 0)
         self.assertIn('Multiple files share the same name', result.output)
+
+
+class TestRedactMetadata(unittest.TestCase):
+    def setUp(self):
+        datadir = datadir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'data'
+        )
+        self.tax_fp = os.path.join(datadir, 'taxonomy.qza')
+        self.tax_bar_fp = os.path.join(datadir, 'taxa-bar-plots.qzv')
+        self.demux_fp = os.path.join(datadir, 'demux.qza')
+        self.runner = CliRunner()
+        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.redacted_fp = os.path.join(self.tempdir, 'redacted')
+
+    def test_with_metadata(self):
+        redacted_fp = self.redacted_fp + '.qzv'
+        result = self.runner.invoke(tools, [
+            'redact-metadata', '--input-path', self.tax_bar_fp,
+            '--output-path', redacted_fp
+        ])
+
+        redacted_artifact = Visualization.load(redacted_fp)
+        abs_md_paths, _ = redacted_artifact.metadata_paths()
+
+        for path in abs_md_paths:
+            self.assertEqual(os.path.getsize(path), 0)
+
+        success = f'Succesfully redacted metadata from {self.tax_bar_fp}, ' \
+                  f'and saved to {redacted_fp}.\n'
+
+        self.assertEqual(success, result.output)
+
+    def test_fails_already_redacted(self):
+        '''
+        Redacting metadata from an Artifact twice should fail.
+        '''
+        redacted_fp = self.redacted_fp + '.qza'
+        self.runner.invoke(tools, [
+            'redact-metadata', '--input-path', self.tax_fp,
+            '--output-path', self.redacted_fp
+        ])
+
+        result = self.runner.invoke(tools, [
+            'redact-metadata', '--input-path', redacted_fp,
+            '--output-path', os.path.join(self.tempdir, 'bad')
+        ])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertIn('only redacted metadata', result.output)
+
+    def test_fails_no_metadata(self):
+        '''
+        Redacting metadata from an Artifact with no metadata should fail.
+        '''
+        redacted_fp = self.redacted_fp + '.qza'
+        result = self.runner.invoke(tools, [
+            'redact-metadata', '--input-path', self.demux_fp,
+            '--output-path', redacted_fp
+        ])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertIn('Artifact without metadata', result.output)
 
 
 if __name__ == "__main__":

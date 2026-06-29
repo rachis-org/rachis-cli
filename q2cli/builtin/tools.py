@@ -1768,13 +1768,13 @@ def signature_verify(input_path, name):
     help='Path to save artifact with redacted metadata to.'
 )
 def redact_metadata(input_path, output_path):
-    from qiime2 import Artifact
+    from rachis.sdk.result import Result
     from q2cli.core.config import CONFIG
 
-    artifact = Artifact.load(input_path)
+    artifact = Result.load(input_path)
 
     try:
-        artifact._archiver.redact_metadata()
+        artifact.redact_metadata()
     except ValueError as e:
         click.echo(CONFIG.cfg_style('error', str(e)), err=True)
         raise click.Abort()
