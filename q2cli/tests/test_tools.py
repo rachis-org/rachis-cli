@@ -1034,6 +1034,17 @@ class TestReplay(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
+    def test_replay_provenance_cache(self):
+        cache = Cache(os.path.join(self.tempdir, 'cache'))
+        int_seq1 = Artifact.import_data('IntSequence1', [1, 2, 3])
+        cache.save(int_seq1, 'int_seq1')
+        cache_fp = os.path.join(self.tempdir, 'cache:int_seq1')
+
+        self.runner.invoke(
+            tools,
+            ['replay-provenance', 'in-fp', cache_fp, '--out-fp', self.tempdir]
+        )
+
     def test_replay_provenance(self):
         in_fp = os.path.join(self.tempdir, 'concated_ints.qza')
         out_fp = os.path.join(self.tempdir, 'rendered.txt')
@@ -1188,6 +1199,17 @@ class TestReplay(unittest.TestCase):
             re.compile(r'framework\|rachis:.*?\|0.*' * 4, re.DOTALL)
         self.assertRegex(file_contents, framework_citations)
 
+    def test_replay_citations_cache(self):
+        cache = Cache(os.path.join(self.tempdir, 'cache'))
+        int_seq1 = Artifact.import_data('IntSequence1', [1, 2, 3])
+        cache.save(int_seq1, 'int_seq1')
+        cache_fp = os.path.join(self.tempdir, 'cache:int_seq1')
+
+        self.runner.invoke(
+            tools,
+            ['replay-citations', 'in-fp', cache_fp, '--out-fp', self.tempdir]
+        )
+
     def test_replay_supplement(self):
         in_fp = os.path.join(self.tempdir, 'concated_ints.qza')
         out_fp = os.path.join(self.tempdir, 'supplement.zip')
@@ -1278,6 +1300,17 @@ class TestReplay(unittest.TestCase):
                 zfh.extractall(unzipped_path)
 
             self.assertEqual(os.listdir(unzipped_path), ['supplement'])
+
+    def test_replay_supplement_cache(self):
+        cache = Cache(os.path.join(self.tempdir, 'cache'))
+        int_seq1 = Artifact.import_data('IntSequence1', [1, 2, 3])
+        cache.save(int_seq1, 'int_seq1')
+        cache_fp = os.path.join(self.tempdir, 'cache:int_seq1')
+
+        self.runner.invoke(
+            tools,
+            ['replay-supplement', 'in-fp', cache_fp, '--out-fp', self.tempdir]
+        )
 
     # Leave me alone I know the checksums don't match
     @pytest.mark.filterwarnings('ignore::UserWarning')

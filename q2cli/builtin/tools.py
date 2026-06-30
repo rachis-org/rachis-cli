@@ -1287,6 +1287,11 @@ def provenance_replay(
         )
         raise ValueError(msg)
 
+    try:
+        in_fp = q2cli.util.try_as_cache_input(in_fp)
+    except ValueError:
+        pass
+
     replay_provenance(
         usage_driver=usage_driver_type,
         payload=in_fp,
@@ -1347,6 +1352,11 @@ def citations_replay(
     """
     from qiime2.core.archive.provenance_lib.parse import ProvDAG
     from qiime2.core.archive.provenance_lib.replay import replay_citations
+
+    try:
+        in_fp = q2cli.util.try_as_cache_input(in_fp)
+    except ValueError:
+        pass
 
     dag = ProvDAG(in_fp, verbose=verbose, recurse=recurse)
     replay_citations(
@@ -1438,6 +1448,11 @@ def supplement_replay(
             'environment.'
         )
         raise ValueError(msg)
+
+    try:
+        in_fp = q2cli.util.try_as_cache_input(in_fp)
+    except ValueError:
+        pass
 
     replay_supplement(
         usage_drivers=usage_driver_types,
