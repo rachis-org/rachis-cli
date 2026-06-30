@@ -102,19 +102,15 @@ def _special_option_flags(type):
             metadata = 'file'
         elif expr.name == 'MetadataColumn':
             metadata = 'column'
-        elif _is_bool_ast(type.to_ast()):
+        elif _is_bool(type):
             is_bool_flag = True
 
     return multiple, is_bool_flag, metadata
 
 
-def _is_bool_ast(ast):
-    if ast['type'] == 'expression':
-        return ast['name'] == 'Bool'
-    if ast['type'] == 'variable':
-        index = ast['index']
-        return all(_is_bool_ast(row[index]) for row in ast['mapping'])
-    return False
+def _is_bool(type_expr):
+    return all(t.name == 'Bool' for t in type_expr) \
+        and not type_expr.is_bottom()
 
 
 def _get_type_repr(type):
@@ -166,7 +162,7 @@ def _get_metavar(type):
         metavar = 'METADATA'
     elif style.style is not None and style.style != 'simple':
         metavar = 'VALUE'
-    elif _is_bool_ast(type.to_ast()):
+    elif _is_bool(type):
         metavar = ''
     elif qiime2.sdk.util.is_union(type):
         metavar = 'VALUE'
