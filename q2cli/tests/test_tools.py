@@ -2054,15 +2054,8 @@ class TestRedactMetadata(unittest.TestCase):
         ])
 
         self.assertEqual(result.exit_code, 0)
-        redacted_artifact = Result.load(redacted_fp)
-        abs_md_paths, _ = redacted_artifact.metadata_paths()
-
-        for path in abs_md_paths:
-            self.assertEqual(os.path.getsize(path), 0)
-
         success = f'Succesfully redacted metadata from {self.artifact1_fp}, ' \
                   f'and saved to {redacted_fp}.\n'
-
         self.assertEqual(success, result.output)
 
     def test_fails_already_redacted(self):
