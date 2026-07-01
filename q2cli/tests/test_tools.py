@@ -21,6 +21,7 @@ import bibtexparser as bp
 from click.testing import CliRunner
 from qiime2 import Artifact, Metadata
 from qiime2.core.testing.util import get_dummy_plugin
+from qiime2.core.testing.type import IntSequence1, IntSequence2, SingleInt
 from qiime2.metadata.base import SUPPORTED_COLUMN_TYPES
 from qiime2.core.cache import Cache
 from qiime2.sdk.result import Result
@@ -31,7 +32,6 @@ from q2cli.util import load_metadata
 from q2cli.builtin.tools import tools
 from q2cli.commands import RootCommand
 from q2cli.core.usage import ReplayCLIUsage
-from rachis.sdk.result import Visualization
 
 
 class TestCastMetadata(unittest.TestCase):
@@ -2015,31 +2015,52 @@ class TestMakeReport(unittest.TestCase):
 
 
 class TestRedactMetadata(unittest.TestCase):
-    def setUp(self):
-        datadir = datadir = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), 'data'
-        )
-        self.tax_fp = os.path.join(datadir, 'taxonomy.qza')
-        self.tax_bar_fp = os.path.join(datadir, 'taxa-bar-plots.qzv')
-        self.demux_fp = os.path.join(datadir, 'demux.qza')
-        self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
-        self.redacted_fp = os.path.join(self.tempdir, 'redacted')
+    @classmethod
+    def setUpClass(cls):
+        cls.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+
+        metadata_path = os.path.join(cls.tempdir, 'metadata.tsv')
+        with open(metadata_path, 'w') as fh:
+            fh.write('sample-id\tbarcode-sequence\n')
+            fh.write('1\tACT')
+        dummy_md = Metadata.load(metadata_path)
+
+        pm = PluginManager()
+        identity_with_metadata = pm.plugins['dummy-plugin'].actions[
+            'identity_with_metadata'
+        ]
+
+        cls.artifact1_fp = os.path.join(cls.tempdir, 'a1.qza')
+        cls.artifact2_fp = os.path.join(cls.tempdir, 'a2.qza')
+        cls.artifact3_fp = os.path.join(cls.tempdir, 'a3.qza')
+
+        artifact1 = Artifact.import_data(IntSequence1, [0, 6, 7])
+        artifact1, = identity_with_metadata(artifact1, dummy_md)
+        artifact1.save(cls.artifact1_fp)
+        artifact2 = Artifact.import_data(IntSequence2, [3, 4, 5])
+        artifact2, = identity_with_metadata(artifact2, dummy_md)
+        artifact2.save(cls.artifact2_fp)
+        artifact3 = Artifact.import_data(SingleInt, 9)
+        artifact3.save(cls.artifact3_fp)
+
+        cls.runner = CliRunner()
+        cls.redacted_fp = os.path.join(cls.tempdir, 'redacted')
 
     def test_with_metadata(self):
-        redacted_fp = self.redacted_fp + '.qzv'
+        redacted_fp = self.redacted_fp + '.qza'
         result = self.runner.invoke(tools, [
-            'redact-metadata', '--input-path', self.tax_bar_fp,
+            'redact-metadata', '--input-path', self.artifact1_fp,
             '--output-path', redacted_fp
         ])
 
-        redacted_artifact = Visualization.load(redacted_fp)
+        self.assertEqual(result.exit_code, 0)
+        redacted_artifact = Result.load(redacted_fp)
         abs_md_paths, _ = redacted_artifact.metadata_paths()
 
         for path in abs_md_paths:
             self.assertEqual(os.path.getsize(path), 0)
 
-        success = f'Succesfully redacted metadata from {self.tax_bar_fp}, ' \
+        success = f'Succesfully redacted metadata from {self.artifact1_fp}, ' \
                   f'and saved to {redacted_fp}.\n'
 
         self.assertEqual(success, result.output)
@@ -2050,8 +2071,8 @@ class TestRedactMetadata(unittest.TestCase):
         '''
         redacted_fp = self.redacted_fp + '.qza'
         self.runner.invoke(tools, [
-            'redact-metadata', '--input-path', self.tax_fp,
-            '--output-path', self.redacted_fp
+            'redact-metadata', '--input-path', self.artifact2_fp,
+            '--output-path', redacted_fp
         ])
 
         result = self.runner.invoke(tools, [
@@ -2068,12 +2089,12 @@ class TestRedactMetadata(unittest.TestCase):
         '''
         redacted_fp = self.redacted_fp + '.qza'
         result = self.runner.invoke(tools, [
-            'redact-metadata', '--input-path', self.demux_fp,
+            'redact-metadata', '--input-path', self.artifact3_fp,
             '--output-path', redacted_fp
         ])
 
         self.assertEqual(result.exit_code, 1)
-        self.assertIn('Artifact without metadata', result.output)
+        self.assertIn('Result without metadata', result.output)
 
 
 if __name__ == "__main__":
