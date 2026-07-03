@@ -28,15 +28,28 @@ def _echo_version():
 def _get_parsl_ver():
     import os
     import pathlib
+    import importlib.metadata
 
-    conda_env_prefix = os.environ.get('CONDA_PREFIX')
+    conda_env_prefix = os.environ.get('CONDA_PREFIX', '')
     conda_meta_path = pathlib.Path(conda_env_prefix) / 'conda-meta'
 
     parsl_ver = None
-    for file in conda_meta_path.iterdir():
-        if file.stem.startswith('parsl'):
-            # version is in the structure of: parsl-2026.2.23-pyhcf101f3_0
-            parsl_ver = file.stem.split('-', 2)[1]
+
+    # prefer the parsl version in conda env if available
+    if conda_meta_path.exists():
+        for file in conda_meta_path.iterdir():
+            if file.stem.startswith('parsl-'):
+                # version is in the structure of: parsl-2026.2.23-pyhcf101f3_0
+                parsl_ver = file.stem.split('-', 2)[1]
+                break
+
+    # fall back to any externally installed version if conda env not detectable
+    # or if parsl not found in existing conda env
+    if parsl_ver is None:
+        try:
+            parsl_ver = importlib.metadata.version('parsl')
+        except importlib.metadata.PackageNotFoundError:
+            pass
 
     return parsl_ver
 
