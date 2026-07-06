@@ -1764,3 +1764,42 @@ def signature_verify(input_path, name):
     click.echo(CONFIG.cfg_style('success',
                                 f'Signature {name} on Result '
                                 f'{input_path} verified successfully.'))
+
+
+@tools.command(
+    name='redact-metadata',
+    short_help='Remove metadata from a Result.',
+    help='Remove all metadata from a Result and return the Result '
+         'otherwise unchanged.'
+)
+@click.option(
+    '--input-path',
+    required=True,
+    help='The path to the Result to remove metadata from.'
+)
+@click.option(
+    '--output-path',
+    required=True,
+    help='Path to save the Result with redacted metadata to.'
+)
+def redact_metadata(input_path, output_path):
+    from rachis.sdk.result import Result
+    from q2cli.core.config import CONFIG
+
+    result = Result.load(input_path)
+
+    try:
+        result.redact_metadata()
+    except ValueError as e:
+        click.echo(CONFIG.cfg_style('error', str(e)), err=True)
+        raise click.Abort()
+
+    result.save(output_path)
+
+    click.echo(
+        CONFIG.cfg_style(
+            'success',
+            f'Succesfully redacted metadata from {input_path}, and saved to '
+            f'{output_path}.'
+        )
+    )
