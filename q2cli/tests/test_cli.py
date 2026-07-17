@@ -19,14 +19,19 @@ import unittest.mock
 
 from click.testing import CliRunner
 from qiime2.core.cache import get_cache
-from qiime2.core.testing.type import IntSequence1, IntSequence2, SingleInt
+from qiime2.core.testing.format import EchoFormat
+from qiime2.core.testing.type import (
+    Bar, C1, Foo, IntSequence1, IntSequence2, SingleInt
+)
 from qiime2.core.testing.util import get_dummy_plugin
+from qiime2.plugin import Bool, Choices, TypeMap
 from qiime2.sdk import Artifact, Visualization, ResultCollection
 
 from q2cli.builtin.info import info
 from q2cli.builtin.tools import tools
-from q2cli.commands import RootCommand
+from q2cli.commands import PluginCommand, RootCommand
 from q2cli.click.type import QIIME2Type
+from q2cli.core.state import get_plugin_state
 
 
 CONFIG_LEVEL_2 = """[parsl]
@@ -92,6 +97,30 @@ EXPECTED_CITATIONS = """% use `qiime tools citations` on a QIIME 2 result for co
  year = {2012}
 }
 """  # noqa: E501
+
+
+def _register_higher_union_bool_flag_action():
+    def higher_union_bool_flag_swaps_output_method(a: EchoFormat,
+                                                   b: bool) -> EchoFormat:
+        return a
+
+    plugin = get_dummy_plugin()
+    action_id = 'higher_union_bool_flag_swaps_output_method'
+    if action_id not in plugin.actions:
+        P, R = TypeMap({
+            Bool % Choices(True): C1[Foo],
+            Bool % Choices(False): Foo,
+        })
+        plugin.methods.register_function(
+            function=higher_union_bool_flag_swaps_output_method,
+            inputs={'a': Bar},
+            parameters={'b': P},
+            outputs=[('x', R)],
+            name='Higher Union Bool Flag Swaps Output Method',
+            description=(
+                'Test if a higher-union bool parameter can change output'),
+        )
+    return plugin
 
 
 class CliTests(unittest.TestCase):
@@ -232,6 +261,44 @@ class CliTests(unittest.TestCase):
             '--i-mapping', self.mapping_path, '--p-do-extra-thing', '--p-add',
             '10', '--output-dir', output_dir, '--verbose'])
         self.assertEqual(result.exit_code, 0)
+
+    def test_higher_union_bool_typemap_parameter_is_flag(self):
+        plugin = _register_higher_union_bool_flag_action()
+        command = PluginCommand(get_plugin_state(plugin), 'dummy-plugin')
+
+        results = self.runner.invoke(
+            command, [
+                'higher-union-bool-flag-swaps-output-method', '--help'])
+        self.assertEqual(results.exit_code, 0)
+        self.assertIn('--p-b / --p-no-b', results.output)
+
+        input_path = Artifact.import_data(
+            'Bar', 'element', view_type=str).save(
+                os.path.join(self.tempdir, 'bar.qza'))
+        true_output_path = os.path.join(self.tempdir, 'true-output.qza')
+        false_output_path = os.path.join(self.tempdir, 'false-output.qza')
+
+        result = self.runner.invoke(
+            command, [
+                'higher-union-bool-flag-swaps-output-method',
+                '--i-a', input_path,
+                '--p-b',
+                '--o-x', true_output_path,
+                '--verbose'
+            ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(repr(Artifact.load(true_output_path).type), 'C1[Foo]')
+
+        result = self.runner.invoke(
+            command, [
+                'higher-union-bool-flag-swaps-output-method',
+                '--i-a', input_path,
+                '--p-no-b',
+                '--o-x', false_output_path,
+                '--verbose'
+            ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(repr(Artifact.load(false_output_path).type), 'Foo')
 
     def test_execute_hidden_action(self):
         int_path = os.path.join(self.tempdir, 'int.qza')
