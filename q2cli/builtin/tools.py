@@ -305,9 +305,11 @@ def peek(paths, tsv):
                  qiime2.sdk.Result.peek(path) for path in paths}
 
     if tsv:
-        click.echo("Filename\tType\tUUID\tData Format")
+        click.echo("Filename\tType\tUUID\tData Format\tLast Action")
         for path, m in metadatas.items():
-            click.echo(f"{path}\t{m.type}\t{m.uuid}\t{m.format}")
+            click.echo(
+                f"{path}\t{m.type}\t{m.uuid}\t{m.format}\t{m.last_action}"
+            )
 
     elif len(metadatas) == 1:
         metadata = metadatas[os.path.basename(paths[0])]
@@ -318,12 +320,16 @@ def peek(paths, tsv):
         if metadata.format is not None:
             click.echo(CONFIG.cfg_style('type', "Data format")+": ", nl=False)
             click.echo(metadata.format)
+        if metadata.last_action is not None:
+            click.echo(CONFIG.cfg_style('type', "Last action")+": ", nl=False)
+            click.echo(metadata.last_action)
 
     else:
         COLUMN_FILENAME = "Filename"
         COLUMN_TYPE = "Type"
         COLUMN_UUID = "UUID"
         COLUMN_DATA_FORMAT = "Data Format"
+        COLUMN_LAST_ACTION = "Last Action"
 
         filename_width = max([len(p) for p in paths]
                              + [len(COLUMN_FILENAME)])
@@ -334,19 +340,24 @@ def peek(paths, tsv):
         data_format_width = \
             max([len(i.format) if i.format is not None else 0
                  for i in metadatas.values()] + [len(COLUMN_DATA_FORMAT)])
+        last_action_width = \
+            max([len(i.last_action) if i.last_action is not None else 0
+                 for i in metadatas.values()] + [len(COLUMN_LAST_ACTION)])
 
         padding = 2
         format_string = f"{{f:<{filename_width + padding}}} " + \
                         f"{{t:<{type_width + padding}}} " + \
                         f"{{u:<{uuid_width + padding}}} " + \
-                        f"{{d:<{data_format_width + padding}}}"
+                        f"{{d:<{data_format_width + padding}}}" + \
+                        f"{{l:<{last_action_width + padding}}}"
 
         click.secho(
             format_string.format(
                 f=COLUMN_FILENAME,
                 t=COLUMN_TYPE,
                 u=COLUMN_UUID,
-                d=COLUMN_DATA_FORMAT),
+                d=COLUMN_DATA_FORMAT,
+                l=COLUMN_LAST_ACTION),
             bold=True, fg="green")
         for path, m in metadatas.items():
             click.echo(
@@ -354,7 +365,9 @@ def peek(paths, tsv):
                     f=path,
                     t=m.type,
                     u=m.uuid,
-                    d=(m.format if m.format is not None else 'N/A')))
+                    d=(m.format if m.format is not None else 'N/A'),
+                    l=(m.last_action if m.last_action is not None else 'N/A'))
+            )
 
 
 _COLUMN_TYPES = ['categorical', 'numeric']
