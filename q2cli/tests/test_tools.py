@@ -862,6 +862,12 @@ class TestPeek(unittest.TestCase):
         self.assertEqual(result.output.count('\t'), 12)
         self.assertEqual(result.output.count('\n'), 3)
 
+    def test_last_action(self):
+        result = self.runner.invoke(tools, ['peek', '--tsv', self.artifact,
+                                            self.viz])
+        print(result.output)
+        self.assertIn("dummy-plugin.most_common_viz", result.output)
+
 
 class TestListTypes(unittest.TestCase):
     def setUp(self):
