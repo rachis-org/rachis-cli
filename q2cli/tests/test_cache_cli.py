@@ -18,7 +18,7 @@ from click.testing import CliRunner
 from qiime2.core.testing.type import (IntSequence1, IntSequence2, Mapping,
                                       SingleInt)
 from qiime2.core.testing.util import get_dummy_plugin
-from qiime2.core.util import load_action_yaml
+from qiime2.core.archive import Archiver
 from qiime2.core.cache import Cache
 
 from q2cli.commands import RootCommand
@@ -1022,23 +1022,27 @@ class TestCacheCli(unittest.TestCase):
         execution_contexts = []
 
         for result in collection.values():
-            alias_uuid = load_action_yaml(
-                result._archiver.path)['action']['alias-of']
-            execution_contexts.append(load_action_yaml(
-                self.cache.data / alias_uuid)
-                ['execution']['execution_context'])
+            result_archive = Archiver.get_archive(result._archiver.path)
+            alias_uuid = result_archive.load_action_yaml()[
+                'action']['alias-of']
+            cache_archive = Archiver.get_archive(self.cache.data / alias_uuid)
+            execution_contexts.append(
+                cache_archive.load_action_yaml()[
+                    'execution']['execution_context']
+            )
 
         return execution_contexts
 
     def _load_alias_uuid(self, result):
-        return load_action_yaml(result._archiver.path)['action']['alias-of']
+        archive = Archiver.get_archive(result._archiver.path)
+        return archive.load_action_yaml()['action']['alias-of']
 
     def _load_alias_uuids(self, collection):
         uuids = []
 
         for artifact in collection.values():
-            uuids.append(load_action_yaml(
-                artifact._archiver.path)['action']['alias-of'])
+            archive = Archiver.get_archive(artifact._archiver.path)
+            uuids.append(archive.load_action_yaml()['action']['alias-of'])
 
         return uuids
 

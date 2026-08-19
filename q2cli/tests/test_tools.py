@@ -830,7 +830,8 @@ class TestPeek(unittest.TestCase):
         self.assertIn("UUID:", result.output)
         self.assertIn("Type:", result.output)
         self.assertNotIn("Data format:", result.output)
-        self.assertEqual(result.output.count('\n'), 2)
+        self.assertIn("Last action:", result.output)
+        self.assertEqual(result.output.count('\n'), 3)
 
     def test_artifact_and_visualization(self):
         result = self.runner.invoke(tools, ['peek', self.artifact, self.viz])
@@ -843,19 +844,29 @@ class TestPeek(unittest.TestCase):
 
     def test_single_file_tsv(self):
         result = self.runner.invoke(tools, ['peek', '--tsv', self.artifact])
-        self.assertIn("Filename\tType\tUUID\tData Format\n", result.output)
+        self.assertIn(
+            "Filename\tType\tUUID\tData Format\tLast Action\n", result.output
+        )
         self.assertIn("artifact.qza", result.output)
-        self.assertEqual(result.output.count('\t'), 6)
+        self.assertEqual(result.output.count('\t'), 8)
         self.assertEqual(result.output.count('\n'), 2)
 
     def test_multiple_file_tsv(self):
         result = self.runner.invoke(tools, ['peek', '--tsv', self.artifact,
                                             self.viz])
-        self.assertIn("Filename\tType\tUUID\tData Format\n", result.output)
+        self.assertIn(
+            "Filename\tType\tUUID\tData Format\tLast Action\n", result.output
+        )
         self.assertIn("artifact.qza", result.output)
         self.assertIn("viz.qzv", result.output)
-        self.assertEqual(result.output.count('\t'), 9)
+        self.assertEqual(result.output.count('\t'), 12)
         self.assertEqual(result.output.count('\n'), 3)
+
+    def test_last_action(self):
+        result = self.runner.invoke(tools, ['peek', '--tsv', self.artifact,
+                                            self.viz])
+        print(result.output)
+        self.assertIn("dummy-plugin.most_common_viz", result.output)
 
 
 class TestListTypes(unittest.TestCase):
