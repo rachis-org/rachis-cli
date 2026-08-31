@@ -14,15 +14,15 @@ import shlex
 import textwrap
 from typing import Any, Callable, Dict, List, Tuple, Type
 
-from qiime2 import ResultCollection
-import qiime2.sdk.usage as usage
-from qiime2.sdk.usage import (
+from rachis import ResultCollection
+import rachis.sdk.usage as usage
+from rachis.sdk.usage import (
     UsageVariable, Usage, UsageInputs, UsageOutputs
 )
-from qiime2.core.archive.provenance_lib.usage_drivers import (
+from rachis.core.archive.provenance_lib.usage_drivers import (
     build_header, build_footer, ReplayUsageAction
 )
-from qiime2.core.archive.provenance_lib import ProvDAG
+from rachis.core.archive.provenance_lib import ProvDAG
 
 import rachis_cli.util as util
 from rachis_cli.core.state import get_action_state

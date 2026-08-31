@@ -13,9 +13,9 @@ import tempfile
 import configparser
 
 from click.testing import CliRunner
-from qiime2 import Artifact
-from qiime2.core.testing.type import IntSequence1
-from qiime2.core.testing.util import get_dummy_plugin
+from rachis import Artifact
+from rachis.core.testing.type import IntSequence1
+from rachis.core.testing.util import get_dummy_plugin
 
 import rachis_cli.util
 from rachis_cli.builtin.dev import dev

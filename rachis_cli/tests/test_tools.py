@@ -19,14 +19,14 @@ import zipfile
 import bibtexparser as bp
 
 from click.testing import CliRunner
-from qiime2 import Artifact, Metadata
-from qiime2.core.testing.util import get_dummy_plugin
-from qiime2.core.testing.type import IntSequence1, IntSequence2, SingleInt
-from qiime2.metadata.base import SUPPORTED_COLUMN_TYPES
-from qiime2.core.cache import Cache
-from qiime2.sdk.result import Result
-from qiime2.sdk.plugin_manager import PluginManager
-from qiime2.core.annotate import Note
+from rachis import Artifact, Metadata
+from rachis.core.testing.util import get_dummy_plugin
+from rachis.core.testing.type import IntSequence1, IntSequence2, SingleInt
+from rachis.metadata.base import SUPPORTED_COLUMN_TYPES
+from rachis.core.cache import Cache
+from rachis.sdk.result import Result
+from rachis.sdk.plugin_manager import PluginManager
+from rachis.core.annotate import Note
 
 from rachis_cli.util import load_metadata
 from rachis_cli.builtin.tools import tools
@@ -1125,7 +1125,7 @@ class TestReplay(unittest.TestCase):
         self.assertRegex(str(result.exception),
                          'Metadata not parsed for replay')
 
-    @patch('qiime2.sdk.util.get_available_usage_drivers',
+    @patch('rachis.sdk.util.get_available_usage_drivers',
            return_value={'cli': ReplayCLIUsage})
     def test_replay_provenance_usage_driver_not_available(self, patch):
         in_fp = os.path.join(self.tempdir, 'concated_ints.qza')
@@ -1269,7 +1269,7 @@ class TestReplay(unittest.TestCase):
         with zipfile.ZipFile(out_fp, 'r') as zfh:
             self.assertNotIn(not_exp, set(zfh.namelist()))
 
-    @patch('qiime2.sdk.util.get_available_usage_drivers', return_value={})
+    @patch('rachis.sdk.util.get_available_usage_drivers', return_value={})
     def test_replay_supplement_usage_driver_not_available(self, patch):
         in_fp = os.path.join(self.tempdir, 'concated_ints.qza')
         out_fp = os.path.join(self.tempdir, 'rendered.txt')

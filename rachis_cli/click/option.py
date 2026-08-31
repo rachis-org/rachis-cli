@@ -187,7 +187,7 @@ class GeneratedOption(click.Option):
     def type_cast_value(self, ctx, value):
         import sys
         import rachis_cli.util
-        import qiime2.sdk.util
+        import rachis.sdk.util
 
         if self.multiple:
             if value == () or value is None:
@@ -221,7 +221,7 @@ class GeneratedOption(click.Option):
                 else:
                     value = self.q2_multiple(value)
 
-                type_expr = qiime2.sdk.util.type_from_ast(self.q2_ast)
+                type_expr = rachis.sdk.util.type_from_ast(self.q2_ast)
                 args = ', '.join(map(repr, (x.type for x in value)))
 
                 if value not in type_expr:
@@ -284,10 +284,10 @@ class GeneratedOption(click.Option):
                         _values = value
 
                     value = \
-                        qiime2.sdk.util.parse_primitive(self.q2_ast, _values)
+                        rachis.sdk.util.parse_primitive(self.q2_ast, _values)
                 except ValueError:
                     args = ', '.join(map(repr, value))
-                    expr = qiime2.sdk.util.type_from_ast(self.q2_ast)
+                    expr = rachis.sdk.util.type_from_ast(self.q2_ast)
                     raise click.BadParameter(
                         'received <%s> as an argument, which is incompatible'
                         ' with parameter type: %r' % (args, expr),

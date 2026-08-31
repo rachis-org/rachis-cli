@@ -30,7 +30,7 @@ def set_used_artifact_cache(args):
 
     Should only be called once to init the used cache for this invocation.
     """
-    from qiime2.core.cache import Cache
+    from rachis.core.cache import Cache
     from rachis_cli.util import exit_with_error
 
     global _USED_ARTIFACT_CACHE
@@ -76,6 +76,6 @@ def get_used_artifact_cache():
         The default cache if the user didn't set a cache or the cache they set
         if they did set one.
     """
-    from qiime2.core.cache import Cache
+    from rachis.core.cache import Cache
 
     return Cache() if _USED_ARTIFACT_CACHE is None else _USED_ARTIFACT_CACHE

@@ -11,7 +11,7 @@ from typing import Literal
 
 import click
 
-from qiime2.core.annotate import ANNOTATION_TYPE_DICT
+from rachis.core.annotate import ANNOTATION_TYPE_DICT
 
 import rachis_cli.util
 from rachis_cli.click.command import ToolCommand, ToolGroupCommand
@@ -20,14 +20,14 @@ _COMBO_METAVAR = 'ARTIFACT/VISUALIZATION'
 
 
 def _import(type, input_path, input_format, validate_level):
-    import qiime2.sdk
-    import qiime2.plugin
+    import rachis.sdk
+    import rachis.plugin
 
     try:
-        artifact = qiime2.sdk.Artifact.import_data(
+        artifact = rachis.sdk.Artifact.import_data(
             type, input_path, view_type=input_format,
             validate_level=validate_level)
-    except qiime2.plugin.ValidationError as e:
+    except rachis.plugin.ValidationError as e:
         header = 'There was a problem importing %s:' % input_path
         rachis_cli.util.exit_with_error(e, header=header, traceback=None)
     except Exception as e:
@@ -40,23 +40,23 @@ def _import(type, input_path, input_format, validate_level):
 def _export(result, output_format, output_path):
     import distutils
 
-    import qiime2.sdk
-    import qiime2.util
+    import rachis.sdk
+    import rachis.util
     from rachis_cli.core.config import CONFIG
 
     if output_format is None:
-        if isinstance(result, qiime2.sdk.Artifact):
+        if isinstance(result, rachis.sdk.Artifact):
             output_format = result.format.__name__
         else:
             output_format = 'Visualization'
         result.export_data(output_path)
     else:
-        if isinstance(result, qiime2.sdk.Visualization):
+        if isinstance(result, rachis.sdk.Visualization):
             error = '--output-format cannot be used with visualizations'
             click.echo(CONFIG.cfg_style('error', error), err=True)
             click.get_current_context().exit(1)
         else:
-            source = result.view(qiime2.sdk.parse_format(output_format))
+            source = result.view(rachis.sdk.parse_format(output_format))
             if os.path.isfile(str(source)):
                 if os.path.isfile(output_path):
                     os.remove(output_path)
@@ -67,7 +67,7 @@ def _export(result, output_format, output_path):
                 if os.path.dirname(output_path) != '':
                     # create directory (recursively) if it doesn't exist yet
                     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                qiime2.util.duplicate(str(source), output_path)
+                rachis.util.duplicate(str(source), output_path)
             else:
                 distutils.dir_util.copy_tree(str(source), output_path)
 
@@ -100,10 +100,10 @@ def tools():
               help='Format which the data should be exported as. '
               'This option cannot be used with Visualizations')
 def export_data(input_path, output_path, output_format):
-    import qiime2.sdk
+    import rachis.sdk
     from rachis_cli.core.config import CONFIG
 
-    result = qiime2.sdk.Result.load(input_path)
+    result = rachis.sdk.Result.load(input_path)
 
     output_format = _export(result, output_format, output_path)
 
@@ -298,11 +298,11 @@ def import_data(type, input_path, output_path, input_format, validate_level):
 @click.option('--tsv/--no-tsv', default=False,
               help='Print as machine-readable tab-separated values.')
 def peek(paths, tsv):
-    import qiime2.sdk
+    import rachis.sdk
     from rachis_cli.core.config import CONFIG
 
     metadatas = {os.path.basename(path):
-                 qiime2.sdk.Result.peek(path) for path in paths}
+                 rachis.sdk.Result.peek(path) for path in paths}
 
     if tsv:
         click.echo("Filename\tType\tUUID\tData Format")
@@ -393,7 +393,7 @@ _COLUMN_TYPES = ['categorical', 'numeric']
 def cast_metadata(paths, cast, output_file, ignore_extra,
                   error_on_missing):
     import tempfile
-    from qiime2 import Metadata, metadata
+    from rachis import Metadata, metadata
 
     md = _merge_metadata(paths)
 
@@ -555,7 +555,7 @@ def _merge_metadata(paths):
                               writable=True),
               help='Path where output report should be written.')
 def make_report(visualization_paths, report_path):
-    from qiime2 import Visualization
+    from rachis import Visualization
     from q2templates.reports import matryoshka_template
     from rachis_cli.core.config import CONFIG
 
@@ -609,7 +609,7 @@ def view(result_path, port, verbose):
     import urllib.parse
     import mimetypes
 
-    from qiime2.sdk import Result
+    from rachis.sdk import Result
 
     from rachis_cli.core.config import CONFIG
 
@@ -777,11 +777,11 @@ def view(result_path, port, verbose):
               default=os.getcwd())
 def extract(input_path, output_path):
     import zipfile
-    import qiime2.sdk
+    import rachis.sdk
     from rachis_cli.core.config import CONFIG
 
     try:
-        extracted_dir = qiime2.sdk.Result.extract(input_path, output_path)
+        extracted_dir = rachis.sdk.Result.extract(input_path, output_path)
     except (zipfile.BadZipFile, ValueError):
         raise click.BadParameter(
             '%s is not a valid rachis Result. Only rachis Artifacts and '
@@ -809,18 +809,18 @@ def extract(input_path, output_path):
                    'the potential cost of runtime).',
               default='max', show_default=True)
 def validate(path, level):
-    import qiime2.sdk
+    import rachis.sdk
     from rachis_cli.core.config import CONFIG
 
     try:
-        result = qiime2.sdk.Result.load(path)
+        result = rachis.sdk.Result.load(path)
     except Exception as e:
         header = 'There was a problem loading %s as a rachis Result:' % path
         rachis_cli.util.exit_with_error(e, header=header)
 
     try:
         result.validate(level)
-    except qiime2.plugin.ValidationError as e:
+    except rachis.plugin.ValidationError as e:
         header = 'Result %s does not appear to be valid at level=%s:' % (
                 path, level)
         rachis_cli.util.exit_with_error(e, header=header, traceback=None)
@@ -841,13 +841,13 @@ def validate(path, level):
                                         dir_okay=False, readable=True),
                 metavar=_COMBO_METAVAR)
 def citations(path):
-    import qiime2.sdk
+    import rachis.sdk
     import io
     from rachis_cli.core.config import CONFIG
     ctx = click.get_current_context()
 
     try:
-        result = qiime2.sdk.Result.load(path)
+        result = rachis.sdk.Result.load(path)
     except Exception as e:
         header = 'There was a problem loading %s as a rachis result:' % path
         rachis_cli.util.exit_with_error(e, header=header)
@@ -871,7 +871,7 @@ def citations(path):
               type=click.Path(exists=False, readable=True),
               help='Path to a nonexistent directory to be created as a cache.')
 def cache_create(cache):
-    from qiime2.core.cache import Cache
+    from rachis.core.cache import Cache
     from rachis_cli.core.config import CONFIG
 
     try:
@@ -897,7 +897,7 @@ def cache_create(cache):
               help='The key to remove from the cache. Pass `key` parameter '
                    'multiple times to remove multiple keys.')
 def cache_remove(cache, key):
-    from qiime2.core.cache import Cache
+    from rachis.core.cache import Cache
     from rachis_cli.core.config import CONFIG
 
     # I don't want to instantiate this every time in the loop
@@ -935,7 +935,7 @@ def cache_remove(cache, key):
                               readable=True),
               help='Path to an existing cache to run garbage collection on.')
 def cache_garbage_collection(cache):
-    from qiime2.core.cache import Cache
+    from rachis.core.cache import Cache
     from rachis_cli.core.config import CONFIG
 
     try:
@@ -966,8 +966,8 @@ def cache_garbage_collection(cache):
               help='The key to save the artifact under (must be a valid '
                    'Python identifier).')
 def cache_store(cache, artifact_path, key):
-    from qiime2.sdk.result import Result
-    from qiime2.core.cache import Cache
+    from rachis.sdk.result import Result
+    from rachis.core.cache import Cache
     from rachis_cli.core.config import CONFIG
     from rachis.sdk.util import validate_result_collection_keys
 
@@ -1025,7 +1025,7 @@ def cache_store(cache, artifact_path, key):
                    ' file or directory, whereas "min" will not usually do so.'
                    ' [default: "max"]')
 def cache_import(type, input_path, cache, key, input_format, validate_level):
-    from qiime2 import Cache
+    from rachis import Cache
     from rachis_cli.core.config import CONFIG
     from rachis.sdk.util import validate_result_collection_keys
 
@@ -1071,7 +1071,7 @@ def cache_import(type, input_path, cache, key, input_format, validate_level):
               help='Format which the data should be exported as. '
               'This option cannot be used with Visualizations')
 def export_cache(cache, key, output_path, output_format):
-    from qiime2 import Cache
+    from rachis import Cache
     from rachis_cli.core.config import CONFIG
 
     try:
@@ -1105,7 +1105,7 @@ def export_cache(cache, key, output_path, output_format):
               type=click.Path(exists=False, readable=True),
               help='Path to put the .qza we are loading the artifact into.')
 def cache_fetch(cache, key, output_path):
-    from qiime2.core.cache import Cache
+    from rachis.core.cache import Cache
     from rachis_cli.core.config import CONFIG
 
     try:
@@ -1134,8 +1134,8 @@ def cache_fetch(cache, key, output_path):
                               readable=True),
               help='Path to an existing cache to check the status of.')
 def cache_status(cache):
-    from qiime2.core.cache import Cache
-    from qiime2.sdk.result import Result
+    from rachis.core.cache import Cache
+    from rachis.sdk.result import Result
 
     from rachis_cli.core.config import CONFIG
 
@@ -1272,8 +1272,8 @@ def provenance_replay(
     """
     Replay provenance from a rachis Artifact filepath to a written executable
     """
-    from qiime2.core.archive.provenance_lib.replay import replay_provenance
-    from qiime2.sdk.util import get_available_usage_drivers
+    from rachis.core.archive.provenance_lib.replay import replay_provenance
+    from rachis.sdk.util import get_available_usage_drivers
     from rachis_cli.util import get_plugin_manager
 
     get_plugin_manager()
@@ -1350,8 +1350,8 @@ def citations_replay(
     Not for use in reporting e.g. software versions used in an analysis, as
     deduplication removes duplicate references with different plugin versions.
     """
-    from qiime2.core.archive.provenance_lib.parse import ProvDAG
-    from qiime2.core.archive.provenance_lib.replay import replay_citations
+    from rachis.core.archive.provenance_lib.parse import ProvDAG
+    from rachis.core.archive.provenance_lib.replay import replay_citations
 
     try:
         in_fp = rachis_cli.util.try_as_cache_input(in_fp)
@@ -1435,8 +1435,8 @@ def supplement_replay(
     - replay scripts for all supported interfaces
     - a bibtex-formatted collection of all citations
     """
-    from qiime2.core.archive.provenance_lib.replay import replay_supplement
-    from qiime2.sdk.util import get_available_usage_drivers
+    from rachis.core.archive.provenance_lib.replay import replay_supplement
+    from rachis.sdk.util import get_available_usage_drivers
     from rachis_cli.util import get_plugin_manager
 
     get_plugin_manager()
@@ -1531,11 +1531,11 @@ def annotation_create(input_path, annotation_type, name,
                       fingerprint,
                       output_path):
     """Load a Result, add an Annotation and save."""
-    import qiime2.sdk
-    from qiime2.core.annotate import Note, Signature
+    import rachis.sdk
+    from rachis.core.annotate import Note, Signature
     from rachis_cli.core.config import CONFIG
 
-    result = qiime2.sdk.Result.load(input_path)
+    result = rachis.sdk.Result.load(input_path)
 
     if annotation_type == 'Note':
         # enforce exactly one of `--text` or `--file`
@@ -1604,10 +1604,10 @@ def annotation_create(input_path, annotation_type, name,
 )
 def annotation_remove(input_path, name, output_path):
     """Load a Result, remove an Annotation by name and save."""
-    import qiime2.sdk
+    import rachis.sdk
     from rachis_cli.core.config import CONFIG
 
-    result = qiime2.sdk.Result.load(input_path)
+    result = rachis.sdk.Result.load(input_path)
 
     try:
         result.remove_annotation(name)
@@ -1651,10 +1651,10 @@ def annotation_fetch(input_path, name, verbose):
     """
     Load a Result, retrieve an Annotation by name and display the contents.
     """
-    import qiime2.sdk
+    import rachis.sdk
     from rachis_cli.core.config import CONFIG
 
-    result = qiime2.sdk.Result.load(input_path)
+    result = rachis.sdk.Result.load(input_path)
 
     try:
         annotation = result.get_annotation(name)
@@ -1701,10 +1701,10 @@ def annotation_list(input_path):
     Load a Result, retrieve all Annotations
     and display their ids, names & types.
     """
-    import qiime2.sdk
+    import rachis.sdk
     from rachis_cli.core.config import CONFIG
 
-    result = qiime2.sdk.Result.load(input_path)
+    result = rachis.sdk.Result.load(input_path)
 
     try:
         annotations_iter = result.iter_annotations()
@@ -1750,10 +1750,10 @@ def annotation_list(input_path):
     help='The name of the Signature to verify.'
 )
 def signature_verify(input_path, name):
-    import qiime2.sdk
+    import rachis.sdk
     from rachis_cli.core.config import CONFIG
 
-    result = qiime2.sdk.Result.load(input_path)
+    result = rachis.sdk.Result.load(input_path)
 
     try:
         result.verify(name)

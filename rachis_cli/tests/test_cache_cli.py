@@ -15,17 +15,17 @@ import tempfile
 import importlib.resources
 
 from click.testing import CliRunner
-from qiime2.core.testing.type import (IntSequence1, IntSequence2, Mapping,
+from rachis.core.testing.type import (IntSequence1, IntSequence2, Mapping,
                                       SingleInt)
-from qiime2.core.testing.util import get_dummy_plugin
-from qiime2.core.util import load_action_yaml
-from qiime2.core.cache import Cache
+from rachis.core.testing.util import get_dummy_plugin
+from rachis.core.util import load_action_yaml
+from rachis.core.cache import Cache
 
 from rachis_cli.commands import RootCommand
 from rachis_cli.builtin.tools import tools
 from rachis_cli.util import get_default_recycle_pool
-from qiime2.sdk import Artifact, Visualization, ResultCollection
-from qiime2.sdk.parallel_config import PARALLEL_CONFIG
+from rachis.sdk import Artifact, Visualization, ResultCollection
+from rachis.sdk.parallel_config import PARALLEL_CONFIG
 
 
 # What to split the errors raised by intentionally failed pipeline on to get

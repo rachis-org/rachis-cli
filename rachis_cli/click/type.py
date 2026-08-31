@@ -55,14 +55,14 @@ class QIIME2Type(click.ParamType):
 
     @property
     def type_expr(self):
-        import qiime2.sdk.util
+        import rachis.sdk.util
 
         if self._type_expr is None:
-            self._type_expr = qiime2.sdk.util.type_from_ast(self.type_ast)
+            self._type_expr = rachis.sdk.util.type_from_ast(self.type_ast)
         return self._type_expr
 
     def convert(self, value, param, ctx):
-        import qiime2.sdk.util
+        import rachis.sdk.util
         from rachis_cli.core.artifact_cache_global import (
             get_used_artifact_cache)
 
@@ -73,10 +73,10 @@ class QIIME2Type(click.ParamType):
             if self.is_output:
                 return self._convert_output(value, param, ctx)
 
-            if qiime2.sdk.util.is_semantic_type(self.type_expr):
+            if rachis.sdk.util.is_semantic_type(self.type_expr):
                 return self._convert_input(value, param, ctx)
 
-            if qiime2.sdk.util.is_metadata_type(self.type_expr):
+            if rachis.sdk.util.is_metadata_type(self.type_expr):
                 return self._convert_metadata(value, param, ctx)
 
             return self._convert_primitive(value, param, ctx)
@@ -84,7 +84,7 @@ class QIIME2Type(click.ParamType):
     def _convert_output(self, value, param, ctx):
         import os
         from rachis_cli.util import output_in_cache
-        from qiime2.core.type.util import is_collection_type
+        from rachis.core.type.util import is_collection_type
         # Click path fails to validate writability on new paths
 
         # Check if our output path is actually in a cache and if it is skip our
@@ -110,8 +110,8 @@ class QIIME2Type(click.ParamType):
 
     def _convert_input(self, value, param, ctx):
         import os
-        import qiime2.sdk
-        import qiime2.sdk.util
+        import rachis.sdk
+        import rachis.sdk.util
         import rachis_cli.util
 
         try:
@@ -128,7 +128,7 @@ class QIIME2Type(click.ParamType):
         # We want to use click's fail to pretty print whatever error we got
         # from get_input
 
-        if isinstance(result_value, qiime2.sdk.Visualization):
+        if isinstance(result_value, rachis.sdk.Visualization):
             maybe = value[:-1] + 'a'
             hint = ''
             if os.path.exists(maybe):
@@ -139,7 +139,7 @@ class QIIME2Type(click.ParamType):
             self.fail('%r is a rachis visualization (.qzv), not an'
                       ' Artifact (.qza)%s' % (value, hint), param, ctx)
 
-        style = qiime2.sdk.util.interrogate_collection_type(self.type_expr)
+        style = rachis.sdk.util.interrogate_collection_type(self.type_expr)
         if style.style is None and result_value not in self.type_expr:
             # collections need to be handled above this
             self.fail("Expected an artifact of at least type %r."
@@ -171,12 +171,12 @@ class QIIME2Type(click.ParamType):
             return metadata_column
 
     def _convert_primitive(self, value, param, ctx):
-        import qiime2.sdk.util
+        import rachis.sdk.util
 
         try:
-            return qiime2.sdk.util.parse_primitive(self.type_expr, value)
+            return rachis.sdk.util.parse_primitive(self.type_expr, value)
         except ValueError:
-            expr = qiime2.sdk.util.type_from_ast(self.type_ast)
+            expr = rachis.sdk.util.type_from_ast(self.type_ast)
             raise click.BadParameter(
                 'received <%s> as an argument, which is incompatible'
                 ' with parameter type: %r' % (value, expr),

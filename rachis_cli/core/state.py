@@ -73,14 +73,14 @@ def get_action_state(action):
 
 
 def _special_option_flags(type):
-    import qiime2.sdk.util
+    import rachis.sdk.util
     import itertools
 
     multiple = None
     is_bool_flag = False
     metadata = None
 
-    style = qiime2.sdk.util.interrogate_collection_type(type)
+    style = rachis.sdk.util.interrogate_collection_type(type)
 
     if style.style is not None:
         multiple = style.view.__name__
@@ -114,13 +114,13 @@ def _is_bool(type_expr):
 
 
 def _get_type_repr(type):
-    import qiime2.sdk.util
+    import rachis.sdk.util
 
     type_repr = repr(type)
-    style = qiime2.sdk.util.interrogate_collection_type(type)
+    style = rachis.sdk.util.interrogate_collection_type(type)
 
-    if not qiime2.sdk.util.is_semantic_type(type) and \
-            not qiime2.sdk.util.is_union(type):
+    if not rachis.sdk.util.is_semantic_type(type) and \
+            not rachis.sdk.util.is_union(type):
         if style.style is None:
             if style.expr.predicate is not None:
                 type_repr = repr(style.expr.predicate)
@@ -134,7 +134,7 @@ def _get_type_repr(type):
 
 
 def _get_metavar(type):
-    import qiime2.sdk.util
+    import rachis.sdk.util
 
     name_to_var = {
         'Visualization': 'VISUALIZATION',
@@ -146,7 +146,7 @@ def _get_metavar(type):
         'Threads': 'NTHREADS',
     }
 
-    style = qiime2.sdk.util.interrogate_collection_type(type)
+    style = rachis.sdk.util.interrogate_collection_type(type)
 
     multiple = style.style is not None
     if style.style == 'simple':
@@ -156,15 +156,15 @@ def _get_metavar(type):
     else:
         inner_type = None
 
-    if qiime2.sdk.util.is_semantic_type(type):
+    if rachis.sdk.util.is_semantic_type(type):
         metavar = 'ARTIFACT'
-    elif qiime2.sdk.util.is_metadata_type(type):
+    elif rachis.sdk.util.is_metadata_type(type):
         metavar = 'METADATA'
     elif style.style is not None and style.style != 'simple':
         metavar = 'VALUE'
     elif _is_bool(type):
         metavar = ''
-    elif qiime2.sdk.util.is_union(type):
+    elif rachis.sdk.util.is_union(type):
         metavar = 'VALUE'
     else:
         metavar = name_to_var[inner_type.name]

@@ -14,7 +14,7 @@ import unittest
 
 from rachis_cli.core.usage import CLIUsage
 
-from qiime2.core.testing.util import get_dummy_plugin
+from rachis.core.testing.util import get_dummy_plugin
 import pytest
 
 

@@ -156,16 +156,16 @@ def reset_theme():
               help='rachis data type.')
 def assert_result_type(input_path, qiime_type):
     import rachis_cli.util
-    import qiime2.sdk
+    import rachis.sdk
     from os.path import isdir
     from rachis_cli.core.config import CONFIG
 
     rachis_cli.util.get_plugin_manager()
     try:
         if isdir(input_path):
-            result = qiime2.sdk.ResultCollection.load(input_path)
+            result = rachis.sdk.ResultCollection.load(input_path)
         else:
-            result = qiime2.sdk.Result.load(input_path)
+            result = rachis.sdk.Result.load(input_path)
     except Exception as e:
         header = 'There was a problem loading %s as a rachis Result:' % \
             input_path
@@ -200,13 +200,13 @@ def assert_result_type(input_path, qiime_type):
 def assert_result_data(input_path, zip_data_path, expression):
     import re
     import rachis_cli.util
-    import qiime2.sdk
+    import rachis.sdk
     from rachis_cli.core.config import CONFIG
 
     rachis_cli.util.get_plugin_manager()
 
     try:
-        result = qiime2.sdk.Result.load(input_path)
+        result = rachis.sdk.Result.load(input_path)
     except Exception as e:
         header = 'There was a problem loading %s as a rachis result:' % \
                 input_path

@@ -132,7 +132,8 @@ class PluginCommand(BaseCommandMixin, click.MultiCommand):
         # Hide actions that start with _ by default
         for id, a in plugin['actions'].items():
             if id.startswith('_'):
-                self._hidden_actions[rachis_cli.util.hidden_to_cli_name(id)] = a
+                self._hidden_actions[
+                    rachis_cli.util.hidden_to_cli_name(id)] = a
             else:
                 self._action_lookup[rachis_cli.util.to_cli_name(id)] = a
 
@@ -373,7 +374,8 @@ class ActionCommand(BaseCommandMixin, click.Command):
             else:
                 storage = outputs
 
-            opt = rachis_cli.click.option.GeneratedOption(prefix=type[0], **item)
+            opt = rachis_cli.click.option.GeneratedOption(
+                prefix=type[0], **item)
             storage.append(opt)
 
         return inputs, params, outputs
@@ -408,9 +410,9 @@ class ActionCommand(BaseCommandMixin, click.Command):
         import click
         from contextlib import nullcontext
 
-        import qiime2.util
-        from qiime2.core.cache import Cache
-        from qiime2.sdk import ResultCollection
+        import rachis.util
+        from rachis.core.cache import Cache
+        from rachis.sdk import ResultCollection
 
         from rachis_cli.util import (
             output_in_cache, _get_cache_path_and_key, get_default_recycle_pool,
@@ -524,7 +526,7 @@ class ActionCommand(BaseCommandMixin, click.Command):
                    (recycle_pool, cache.path))
             click.echo(CONFIG.cfg_style('warning', msg))
 
-        # `qiime2.util.redirected_stdio` defaults to stdout/stderr when
+        # `rachis.util.redirected_stdio` defaults to stdout/stderr when
         # supplied `None`.
         log = None
 
@@ -554,10 +556,10 @@ class ActionCommand(BaseCommandMixin, click.Command):
         try:
             with (
                 capture_rachis_warnings() if not quiet else nullcontext(),
-                qiime2.util.redirected_stdio(stdout=log, stderr=log)
+                rachis.util.redirected_stdio(stdout=log, stderr=log)
             ):
                 if parallel:
-                    from qiime2.sdk.parallel_config import \
+                    from rachis.sdk.parallel_config import \
                         (load_config_from_file, ParallelConfig)
 
                     action = action.parallel

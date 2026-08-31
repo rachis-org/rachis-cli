@@ -17,19 +17,19 @@ import zipfile
 import pandas as pd
 
 from click.testing import CliRunner
-from qiime2 import Artifact
-from qiime2.core.testing.type import IntSequence1
-from qiime2.core.testing.util import get_dummy_plugin
-from qiime2.sdk.util import camel_to_snake
-from qiime2.sdk.usage import UsageVariable
-from qiime2.sdk import PluginManager
-from qiime2.core.archive.provenance_lib import DummyArtifacts, ProvDAG
-from qiime2.core.archive.provenance_lib.replay import (
+from rachis import Artifact
+from rachis.core.testing.type import IntSequence1
+from rachis.core.testing.util import get_dummy_plugin
+from rachis.sdk.util import camel_to_snake
+from rachis.sdk.usage import UsageVariable
+from rachis.sdk import PluginManager
+from rachis.core.archive.provenance_lib import DummyArtifacts, ProvDAG
+from rachis.core.archive.provenance_lib.replay import (
     ReplayConfig, param_is_metadata_column, dump_recorded_md_file,
     ReplayNamespaces, build_import_usage, build_action_usage,
     ActionCollections, replay_provenance, replay_supplement
 )
-from qiime2.core.archive.provenance_lib.usage_drivers import ReplayPythonUsage
+from rachis.core.archive.provenance_lib.usage_drivers import ReplayPythonUsage
 
 import rachis_cli
 import rachis_cli.util

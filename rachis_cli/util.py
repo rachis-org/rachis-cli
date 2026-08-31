@@ -112,7 +112,7 @@ def output_in_cache(fp):
     """Determines if an output path follows the format
     /path_to_extant_cache:key
     """
-    from qiime2.core.cache import Cache
+    from rachis.core.cache import Cache
 
     # Tells us right away this isn't in a cache
     if ':' not in fp:
@@ -228,9 +228,9 @@ def citations_option(get_citation_records):
         records = get_citation_records()
         if records:
             import io
-            import qiime2.sdk
+            import rachis.sdk
 
-            citations = qiime2.sdk.Citations(
+            citations = rachis.sdk.Citations(
                 [('key%d' % i, r) for i, r in enumerate(records)])
             with io.StringIO() as fh:
                 fh.write('% use `rachis tools citations` on a rachis result'
@@ -282,32 +282,32 @@ def example_data_option(get_plugin, action_name=None):
 
 
 def get_plugin_manager():
-    import qiime2.sdk
+    import rachis.sdk
 
     try:
-        return qiime2.sdk.PluginManager.reuse_existing()
-    except qiime2.sdk.UninitializedPluginManagerError:
+        return rachis.sdk.PluginManager.reuse_existing()
+    except rachis.sdk.UninitializedPluginManagerError:
         import os
 
         if 'MYSTERY_STEW' in os.environ:
             from q2_mystery_stew.plugin_setup import create_plugin
 
             the_stew = create_plugin()
-            pm = qiime2.sdk.PluginManager(add_plugins=False)
+            pm = rachis.sdk.PluginManager(add_plugins=False)
             pm.add_plugin(the_stew)
             return pm
 
-        return qiime2.sdk.PluginManager()
+        return rachis.sdk.PluginManager()
 
 
 def load_metadata(fp):
-    import qiime2
+    import rachis
     import sys
 
     metadata, error = _load_metadata_artifact(fp)
     if metadata is None:
         try:
-            metadata = qiime2.Metadata.load(fp)
+            metadata = rachis.Metadata.load(fp)
         except Exception as e:
             if error and ':' in fp:
                 e = error
@@ -320,7 +320,7 @@ def load_metadata(fp):
 
 
 def _load_metadata_artifact(fp):
-    import qiime2
+    import rachis
     import sys
 
     artifact, error = _load_input(fp)
@@ -336,7 +336,7 @@ def _load_metadata_artifact(fp):
     if artifact:
         try:
             default_tb = None
-            if isinstance(artifact, qiime2.Visualization):
+            if isinstance(artifact, rachis.Visualization):
                 raise Exception(
                     'Visualizations cannot be viewed as rachis metadata.')
             if not artifact.has_metadata():
@@ -345,7 +345,7 @@ def _load_metadata_artifact(fp):
                     " as rachis metadata.")
 
             default_tb = 'stderr'
-            return artifact.view(qiime2.Metadata), None
+            return artifact.view(rachis.Metadata), None
 
         except Exception as e:
             header = ("There was an issue with viewing the artifact "
@@ -407,7 +407,7 @@ def _load_input(fp, view=False):
 
     if isinstance(error, OSError) and error.errno == 28:
         # abort as there's nothing anyone can do about this
-        from qiime2.core.cache import get_cache
+        from rachis.core.cache import get_cache
 
         path = str(get_cache().path)
         return None, OutOfDisk(f'There was not enough space left on {path!r} '
@@ -479,7 +479,7 @@ def _load_input_cache(fp):
 
 
 def _load_input_file(fp):
-    import qiime2.sdk
+    import rachis.sdk
     from os.path import expanduser
 
     # If there is a leading ~ we expand it to be the path to home
@@ -488,7 +488,7 @@ def _load_input_file(fp):
     # test if valid
     peek = None
     try:
-        peek = qiime2.sdk.Result.peek(fp)
+        peek = rachis.sdk.Result.peek(fp)
     except Exception as error:
         if isinstance(error, SyntaxError):
             raise error
@@ -498,7 +498,7 @@ def _load_input_file(fp):
 
     # try to actually load
     try:
-        artifact = qiime2.sdk.Result.load(fp)
+        artifact = rachis.sdk.Result.load(fp)
         return artifact, None
 
     except Exception as e:
@@ -518,7 +518,7 @@ def try_as_cache_input(fp):
     """ Determine if an input is in a cache and load it from the cache if it is
     """
     import os
-    from qiime2 import Cache
+    from rachis import Cache
 
     cache_path, key = _get_cache_path_and_key(fp)
 
@@ -555,7 +555,7 @@ def capture_rachis_warnings():
     '''
     import sys
     import warnings
-    from qiime2.core.exceptions import RachisWarning
+    from rachis.core.exceptions import RachisWarning
 
     captured_warnings = []
 

@@ -13,15 +13,15 @@ from rachis_cli.click.command import ToolCommand
 
 def _echo_version():
     import sys
-    import qiime2
+    import rachis
     import rachis_cli
 
     pyver = sys.version_info
     click.echo('Python version: %d.%d.%d' %
                (pyver.major, pyver.minor, pyver.micro))
     click.echo('Parsl version: %s' % _get_parsl_ver())
-    click.echo('rachis release: %s' % qiime2.__release__)
-    click.echo('rachis version: %s' % qiime2.__version__)
+    click.echo('rachis release: %s' % rachis.__release__)
+    click.echo('rachis version: %s' % rachis.__version__)
     click.echo('rachis-cli version: %s' % rachis_cli.__version__)
 
 
@@ -79,7 +79,7 @@ def info(config_level):
     import rachis_cli.util
     # This import improves performance for repeated _echo_plugins
     import rachis_cli.core.cache
-    from qiime2.sdk.parallel_config import (get_vendored_config,
+    from rachis.sdk.parallel_config import (get_vendored_config,
                                             load_config_from_dict)
     from tomlkit import dumps
 

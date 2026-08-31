@@ -18,14 +18,14 @@ import unittest
 import unittest.mock
 
 from click.testing import CliRunner
-from qiime2.core.cache import get_cache
-from qiime2.core.testing.format import EchoFormat
-from qiime2.core.testing.type import (
+from rachis.core.cache import get_cache
+from rachis.core.testing.format import EchoFormat
+from rachis.core.testing.type import (
     Bar, C1, Foo, IntSequence1, IntSequence2, SingleInt
 )
-from qiime2.core.testing.util import get_dummy_plugin
-from qiime2.plugin import Bool, Choices, TypeMap
-from qiime2.sdk import Artifact, Visualization, ResultCollection
+from rachis.core.testing.util import get_dummy_plugin
+from rachis.plugin import Bool, Choices, TypeMap
+from rachis.sdk import Artifact, Visualization, ResultCollection
 
 from rachis_cli.builtin.info import info
 from rachis_cli.builtin.tools import tools
@@ -490,7 +490,7 @@ class CliTests(unittest.TestCase):
         # This is to ensure the temp in the regex matches the temp used in the
         # method under test in type.py
         temp = str(get_cache().path)
-        with unittest.mock.patch('qiime2.sdk.Result.peek',
+        with unittest.mock.patch('rachis.sdk.Result.peek',
                                  side_effect=OSError(errno.ENOSPC,
                                                      'No space left on '
                                                      'device')):
@@ -506,7 +506,7 @@ class CliTests(unittest.TestCase):
 
         viz_path = os.path.join(self.tempdir, 'viz')
 
-        with unittest.mock.patch('qiime2.sdk.Result.peek',
+        with unittest.mock.patch('rachis.sdk.Result.peek',
                                  side_effect=SyntaxError):
             result = self.runner.invoke(
                 command, ['most-common-viz', '--i-ints', self.artifact1_path,

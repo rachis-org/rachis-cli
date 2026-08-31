@@ -136,6 +136,7 @@ class DeploymentCache:
     def _get_current_requirements(self):
         """Includes installed versions of rachis_cli and rachis plugins."""
         import os
+        import itertools
         import importlib.metadata
         import rachis_cli
 
@@ -148,8 +149,15 @@ class DeploymentCache:
         # containing one or more plugins. It is not necessary to track
         # individual plugin names and versions in order to determine if the
         # cache is outdated.
-        for entry_point in importlib.metadata.entry_points(
-                group='qiime2.plugins'):
+        # Plugins are migrating from the `qiime2.plugins` entry point group
+        # to `rachis.plugins`. Read both, so that the cache still invalidates
+        # for plugins which have not migrated yet. This mirrors
+        # `rachis.sdk.PluginManager.iter_entry_points`. A distribution that
+        # declares both groups yields duplicate entry points, which the `set`
+        # above collapses.
+        for entry_point in itertools.chain(
+                importlib.metadata.entry_points(group='rachis.plugins'),
+                importlib.metadata.entry_points(group='qiime2.plugins')):
             if 'QIIMETEST' in os.environ:
                 if entry_point.name in ('dummy-plugin', 'other-plugin'):
                     reqs.add(f'{entry_point.name}=={entry_point.dist.version}')
