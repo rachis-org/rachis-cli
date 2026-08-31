@@ -1,6 +1,6 @@
 # rachis-cli
 
-![](https://github.com/qiime2/q2cli/workflows/ci-dev/badge.svg)
+![](https://github.com/rachis-org/rachis-cli/workflows/ci-dev/badge.svg)
 
 A [click-based](http://click.pocoo.org/) command line interface for [rachis](https://github.com/rachis-org/rachis).
 
