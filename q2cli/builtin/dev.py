@@ -48,7 +48,7 @@ import_theme_help = \
      "\n"
      "`command` refers to the name of the command you issued. `option` refers "
      "to the arguments you give to the command when running it. `type` refers "
-     "to the QIIME 2 semantic typing of these arguments (where applicable). "
+     "to the rachis semantic typing of these arguments (where applicable). "
      "`default_arg` refers to the label next to the argument indicating its "
      "default value (where applicable), and if it is required (where "
      "applicable). `required` refers to any arguments that must be passed to "
@@ -151,8 +151,9 @@ def reset_theme():
 @click.argument('input-path', type=click.Path(exists=True, file_okay=True,
                 dir_okay=True, readable=True),
                 metavar=_COMBO_METAVAR)
+# TODO: we should probably change this to --rachis-type
 @click.option('--qiime-type', required=True,
-              help='QIIME 2 data type.')
+              help='rachis data type.')
 def assert_result_type(input_path, qiime_type):
     import q2cli.util
     import qiime2.sdk
@@ -166,7 +167,7 @@ def assert_result_type(input_path, qiime_type):
         else:
             result = qiime2.sdk.Result.load(input_path)
     except Exception as e:
-        header = 'There was a problem loading %s as a QIIME 2 Result:' % \
+        header = 'There was a problem loading %s as a rachis Result:' % \
             input_path
         q2cli.util.exit_with_error(e, header=header)
 
@@ -207,7 +208,7 @@ def assert_result_data(input_path, zip_data_path, expression):
     try:
         result = qiime2.sdk.Result.load(input_path)
     except Exception as e:
-        header = 'There was a problem loading %s as a QIIME 2 result:' % \
+        header = 'There was a problem loading %s as a rachis result:' % \
                 input_path
         q2cli.util.exit_with_error(e, header=header)
 

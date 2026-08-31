@@ -55,7 +55,7 @@ class RootCommand(BaseCommandMixin, click.MultiCommand):
                     for old, new in categories)
                 msg = ("Error: The following options no longer exist because "
                        "metadata *categories* are now called metadata "
-                       "*columns* in QIIME 2.\n\n%s" % old_to_new_names)
+                       "*columns* in rachis.\n\n%s" % old_to_new_names)
                 click.echo(CONFIG.cfg_style('error', msg), err=True)
             sys.exit(-1)
 
@@ -110,7 +110,7 @@ class RootCommand(BaseCommandMixin, click.MultiCommand):
                 hint = ''
 
             click.echo(
-                CONFIG.cfg_style('error', "Error: QIIME 2 has no "
+                CONFIG.cfg_style('error', "Error: rachis has no "
                                  "plugin/command named %r." % name + hint),
                 err=True)
             ctx.exit(2)  # Match exit code of `return None`
@@ -178,7 +178,7 @@ class PluginCommand(BaseCommandMixin, click.MultiCommand):
             pkg_name = pkg_version = "[UNKNOWN]"
 
         click.echo(
-            "QIIME 2 Plugin '%s' version %s (from package '%s' version %s)"
+            "rachis Plugin '%s' version %s (from package '%s' version %s)"
             % (self._plugin['name'], self._plugin['version'],
                pkg_name, pkg_version)
         )
@@ -236,7 +236,7 @@ class PluginCommand(BaseCommandMixin, click.MultiCommand):
                 hint = ''
 
             click.echo(
-                CONFIG.cfg_style('error', "Error: QIIME 2 plugin %r has no "
+                CONFIG.cfg_style('error', "Error: rachis plugin %r has no "
                                  "action %r." % (self._plugin['name'], name) +
                                  hint), err=True)
             ctx.exit(2)  # Match exit code of `return None`
@@ -245,7 +245,7 @@ class PluginCommand(BaseCommandMixin, click.MultiCommand):
 
 
 class ActionCommand(BaseCommandMixin, click.Command):
-    """A click manifestation of a QIIME 2 API Action (Method/Visualizer)
+    """A click manifestation of a rachis API Action (Method/Visualizer)
 
     """
     def __init__(self, name, plugin, action):
@@ -276,10 +276,10 @@ class ActionCommand(BaseCommandMixin, click.Command):
                 click.Option(['--recycle-pool'], required=False,
                              type=str,
                              help='Use a cache pool for pipeline resumption. '
-                                  'QIIME 2 will cache your results in this '
+                                  'rachis will cache your results in this '
                                   'pool for reuse by future invocations. '
                                   'These pool are retained until deleted by '
-                                  'the user. If not provided, QIIME 2 will '
+                                  'the user. If not provided, rachis will '
                                   'create a pool which is automatically '
                                   'reused by invocations of the same action '
                                   'and removed if the action is successful. '
@@ -297,6 +297,7 @@ class ActionCommand(BaseCommandMixin, click.Command):
                              help='Execute your action in parallel using a '
                                   'config at the indicated path.')])
 
+        # TODO: update default cache name from qiime2 to rachis
         self._misc.extend([
             q2cli.util.example_data_option(
                 self._get_plugin, self.action['id']),
@@ -529,7 +530,7 @@ class ActionCommand(BaseCommandMixin, click.Command):
 
         if not verbose:
             import tempfile
-            log = tempfile.NamedTemporaryFile(prefix='qiime2-q2cli-err-',
+            log = tempfile.NamedTemporaryFile(prefix='rachis-cli-err-',
                                               suffix='.log',
                                               delete=False, mode='w')
         if action.deprecated:

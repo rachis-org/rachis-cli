@@ -118,7 +118,7 @@ def _generate_command_reply(cmd):
 COMPLETION_SCRIPT_TEMPLATE = """\
 #!/usr/bin/env bash
 
-_qiime_completion()
+_rachis_completion()
 {{
   local COMP_WORDS=(${{COMP_WORDS[*]}})
   local incomplete
@@ -137,7 +137,7 @@ _qiime_completion()
   return 0
 }}
 
-_qiime_completion
+_rachis_completion
 """
 
 COMMAND_REPLY_TEMPLATE = """\

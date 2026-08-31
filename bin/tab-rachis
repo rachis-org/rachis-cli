@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
 # Bash completion script that defers to a cached completion script representing
-# the state of the current QIIME 2 deployment.
+# the state of the current rachis deployment.
 #
 # This script is intended to be executed on the command-line or in
 # .bashrc/.bash_profile:
 #
-#     source tab-qiime
+#     source tab-rachis
 #
 
-_qiime_completion()
+_rachis_completion()
 {
-  # Attempt to find the cached completion script. If q2cli isn't installed, or
+  # Attempt to find the cached completion script. If rachis-cli isn't installed, or
   # is an incompatible version, don't attempt completion.
   local completion_path="$(python -c "import q2cli.util; print(q2cli.util.get_completion_path())" 2> /dev/null)"
 
@@ -39,16 +39,16 @@ _qiime_completion()
   return 0
 }
 
-# Enable default readline and bash completion behavior when `_qiime_completion`
+# Enable default readline and bash completion behavior when `_rachis_completion`
 # doesn't have a reply.
-complete -F _qiime_completion -o default -o bashdefault qiime
+complete -F _rachis_completion -o default -o bashdefault ${usr_cmd}
 
-# Execute a `qiime` command (any command will do) so that tab-completion will
-# work out-of-the-box (e.g. with a fresh installation of q2cli). Running a
+# Execute a `rachis` command (any command will do) so that tab-completion will
+# work out-of-the-box (e.g. with a fresh installation of rachis-cli). Running a
 # command will create or refresh the cache if necessary, which contains the
 # actual completion script.
 #
 # Ignore stdout to avoid displaying help text to users enabling tab-completion.
 # stderr displays the note about cache refreshing, as that can take a few
 # moments to complete.
-qiime &> /dev/null
+${usr_cmd} &> /dev/null

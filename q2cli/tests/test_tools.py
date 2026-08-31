@@ -37,7 +37,7 @@ from q2cli.core.usage import ReplayCLIUsage
 class TestCastMetadata(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         self.metadata_file = os.path.join(
                 self.tempdir, 'metadata.tsv')
@@ -151,7 +151,7 @@ class TestInspectMetadata(unittest.TestCase):
         dummy_plugin = get_dummy_plugin()
 
         self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         self.metadata_file_mixed_types = os.path.join(
                 self.tempdir, 'metadata-mixed-types.tsv')
@@ -198,13 +198,13 @@ class TestInspectMetadata(unittest.TestCase):
         result = self.runner.invoke(tools, ['inspect-metadata', self.ints1])
 
         self.assertEqual(result.exit_code, 1)
-        self.assertIn("IntSequence1 cannot be viewed as QIIME 2 metadata",
+        self.assertIn("IntSequence1 cannot be viewed as rachis metadata",
                       result.output)
 
     def test_visualization(self):
         # make a viz first:
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         # build output parameter arguments and expected output file names
         viz_path = os.path.join(self.tempdir, 'viz.qzv')
         result = self.runner.invoke(
@@ -214,7 +214,7 @@ class TestInspectMetadata(unittest.TestCase):
         result = self.runner.invoke(tools, ['inspect-metadata', viz_path])
 
         self.assertEqual(result.exit_code, 1)
-        self.assertIn("Visualizations cannot be viewed as QIIME 2 metadata",
+        self.assertIn("Visualizations cannot be viewed as rachis metadata",
                       result.output)
 
     def test_metadata_file(self):
@@ -463,7 +463,7 @@ class TestImport(unittest.TestCase):
     def setUpClass(cls):
         cls.runner = CliRunner()
 
-        cls.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        cls.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         cls.in_dir1 = os.path.join(cls.tempdir, 'input1')
         os.mkdir(cls.in_dir1)
@@ -550,7 +550,7 @@ class TestCacheTools(unittest.TestCase):
         self.plugin_command = RootCommand().get_command(
             ctx=None, name='dummy-plugin')
         self.tempdir = \
-            tempfile.TemporaryDirectory(prefix='qiime2-q2cli-test-temp-')
+            tempfile.TemporaryDirectory(prefix='rachis-cli-test-temp-')
 
         self.art1 = Artifact.import_data('IntSequence1', [0, 1, 2])
         self.art2 = Artifact.import_data('IntSequence1', [3, 4, 5])
@@ -792,7 +792,7 @@ def _get_cache_contents(cache):
 class TestPeek(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         # create artifact
         self.artifact = os.path.join(self.tempdir, 'artifact.qza')
@@ -800,8 +800,8 @@ class TestPeek(unittest.TestCase):
             'Mapping', {'foo': 'bar'}).save(self.artifact)
 
         # create visualization
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         self.viz = os.path.join(self.tempdir, 'viz.qzv')
 
         self.ints = os.path.join(self.tempdir, 'ints.qza')
@@ -1007,7 +1007,7 @@ class TestReplay(unittest.TestCase):
         self.runner = CliRunner()
         self.pm = PluginManager()
         self.dp = self.pm.plugins['dummy-plugin']
-        self.tempdir = tempfile.mkdtemp(prefix='q2cli-test-replay-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-replay-temp-')
 
         # contrive artifacts with different sorts of provenance
         int_seq1 = Artifact.import_data('IntSequence1', [1, 2, 3])
@@ -1026,7 +1026,7 @@ class TestReplay(unittest.TestCase):
         left_ints, _ = self.dp.actions['split_ints'](int_seq)
         left_ints.save(os.path.join(inner_dir, 'left_ints.qza'))
 
-        mapping = Artifact.import_data('Mapping', {'qiime': 2, 'triangle': 3})
+        mapping = Artifact.import_data('Mapping', {'rachis': 2, 'triangle': 3})
         int_seq_with_md, = self.dp.actions['identity_with_metadata'](
             int_seq1,
             mapping.view(Metadata))
@@ -1058,7 +1058,7 @@ class TestReplay(unittest.TestCase):
         with open(out_fp, 'r') as fh:
             rendered = fh.read()
 
-        self.assertIn('qiime tools import', rendered)
+        self.assertIn('rachis tools import', rendered)
         self.assertIn('--type \'IntSequence1\'', rendered)
         self.assertIn('--type \'IntSequence2\'', rendered)
         self.assertIn('--input-path <your data here>', rendered)
@@ -1066,7 +1066,7 @@ class TestReplay(unittest.TestCase):
         self.assertIn('--output-path int-sequence1-1.qza', rendered)
         self.assertIn('--output-path int-sequence2-0.qza', rendered)
 
-        self.assertIn('qiime dummy-plugin concatenate-ints', rendered)
+        self.assertIn('rachis dummy-plugin concatenate-ints', rendered)
         self.assertRegex(rendered, '--i-ints[12] int-sequence1-0.qza')
         self.assertRegex(rendered, '--i-ints[12] int-sequence1-1.qza')
         self.assertIn('--i-ints3 int-sequence2-0.qza', rendered)
@@ -1316,8 +1316,8 @@ class TestReplay(unittest.TestCase):
     # Leave me alone I know the checksums don't match
     @pytest.mark.filterwarnings('ignore::UserWarning')
     def test_replay_param_not_found(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
 
         in_fp = os.path.join(self.tempdir, 'concated_ints.qza')
         left_path = os.path.join(self.tempdir, 'left.qza')
@@ -1356,7 +1356,7 @@ class TestReplay(unittest.TestCase):
         MISSING_PARAM = \
 """
   # FIXME: The following parameter name was not found in your current
-  # QIIME 2 environment. This may occur when the plugin version you have
+  # rachis environment. This may occur when the plugin version you have
   # installed does not match the version used in the original analysis.
   # Please see the docs and correct the parameter name before running.
   --?-not real \\
@@ -1383,7 +1383,7 @@ class TestReplay(unittest.TestCase):
 
         import1 = \
 """
-qiime tools import \\
+rachis tools import \\
   --type 'Phylogeny[Rooted]' \\
   --input-path <your data here> \\
   --output-path phylogeny-rooted-0.qza
@@ -1391,7 +1391,7 @@ qiime tools import \\
 
         import2 = \
 """
-qiime tools import \\
+rachis tools import \\
   --type 'FeatureTable[Frequency]' \\
   --input-path <your data here> \\
   --output-path feature-table-frequency-0.qza
@@ -1402,10 +1402,10 @@ qiime tools import \\
 
         FIXME_action = \
 """
-# FIXME: The following action was not found in your current QIIME 2
+# FIXME: The following action was not found in your current rachis
 # environment. Please ensure the action and its parameters are correct before
 # running.
-qiime diversity core-metrics-phylogenetic \\
+rachis diversity core-metrics-phylogenetic \\
   --?-table feature-table-frequency-0.qza \\
   --?-phylogeny phylogeny-rooted-0.qza \\
   --?-sampling-depth 13 \\
@@ -1421,7 +1421,7 @@ qiime diversity core-metrics-phylogenetic \\
 class TestAnnotations(unittest.TestCase):
     def setUp(self):
         self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         # artifact without any starting annotations
         self.art1 = os.path.join(self.tempdir, 'ints1.qza')
@@ -1767,7 +1767,7 @@ class TestCacheExport(unittest.TestCase):
         dummy_plugin = get_dummy_plugin()
 
         self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
         self.cache = Cache(os.path.join(self.tempdir, 'cache'))
 
         ints1 = Artifact.import_data(
@@ -1928,7 +1928,7 @@ class TestCacheExportToFileFormat(unittest.TestCase):
         dummy_plugin = get_dummy_plugin()
 
         self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
         self.cache = Cache(os.path.join(self.tempdir, 'cache'))
 
         ints1 = Artifact.import_data(
@@ -1999,7 +1999,7 @@ class TestMakeReport(unittest.TestCase):
         # ensure dummy plugin is registered
         self.dp = get_dummy_plugin()
         self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         # create an artifact to drive visualizations
         self.ints = Artifact.import_data('IntSequence1', [0, 1, 2])
@@ -2050,7 +2050,7 @@ class TestMakeReport(unittest.TestCase):
 class TestRedactMetadata(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        cls.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         metadata_path = os.path.join(cls.tempdir, 'metadata.tsv')
         with open(metadata_path, 'w') as fh:

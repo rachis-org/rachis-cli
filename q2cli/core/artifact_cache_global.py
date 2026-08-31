@@ -21,7 +21,7 @@ def set_used_artifact_cache(args):
     Parameters
     ----------
     args : List[str]
-        The arguments provided on the cli to this QIIME 2 invocation/
+        The arguments provided on the cli to this rachis invocation/
 
     NOTES
     -----

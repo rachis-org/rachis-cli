@@ -12,15 +12,15 @@ import q2cli.commands
 
 
 ROOT_COMMAND_HELP = """\
-QIIME 2 command-line interface (q2cli)
---------------------------------------
+rachis command-line interface (rachis-cli)
+------------------------------------------
 
-To get help with QIIME 2, visit https://qiime2.org.
+To get help with rachis, visit https://qiime2.org.
 
 To enable tab completion in Bash, run the following command or add it to your \
 .bashrc/.bash_profile:
 
-    source tab-qiime
+    source tab-rachis
 
 To enable tab completion in ZSH, run the following commands or add them to \
 your .zshrc:
@@ -28,7 +28,7 @@ your .zshrc:
 \b
     autoload -Uz compinit && compinit
     autoload bashcompinit && bashcompinit
-    source tab-qiime
+    source tab-rachis
 
 """
 
@@ -37,8 +37,8 @@ your .zshrc:
 @click.command(cls=q2cli.commands.RootCommand, invoke_without_command=True,
                no_args_is_help=True, help=ROOT_COMMAND_HELP)
 @click.version_option(prog_name='q2cli',
-                      message='%(prog)s version %(version)s\nRun `qiime info` '
-                              'for more version details.')
+                      message='%(prog)s version %(version)s\nRun `rachis info`'
+                              ' for more version details.')
 def qiime():
     pass
 

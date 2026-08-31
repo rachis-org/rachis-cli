@@ -74,14 +74,14 @@ def _export(result, output_format, output_path):
     return output_format
 
 
-@click.group(help='Tools for working with QIIME 2 files.',
+@click.group(help='Tools for working with rachis files.',
              cls=ToolGroupCommand)
 def tools():
     pass
 
 
 @tools.command(name='export',
-               short_help='Export data from a QIIME 2 Artifact '
+               short_help='Export data from a rachis Artifact '
                'or a Visualization',
                help='Exporting extracts (and optionally transforms) data '
                'stored inside an Artifact or Visualization. Note that '
@@ -240,15 +240,15 @@ def show_formats(queries, importable, exportable, strict, tsv):
 
 
 @tools.command(name='import',
-               short_help='Import data into a new QIIME 2 Artifact.',
-               help="Import data to create a new QIIME 2 Artifact. See "
+               short_help='Import data into a new rachis Artifact.',
+               help="Import data to create a new rachis Artifact. See "
                     "https://docs.qiime2.org/ for usage examples and details "
                     "on the file types and associated semantic types that can "
                     "be imported.",
                     cls=ToolCommand)
 @click.option('--type', required=True,
               help='The semantic type of the artifact that will be created '
-                   'upon importing. Use `qiime tools list-types` to see what '
+                   'upon importing. Use `rachis tools list-types` to see what '
                    'importable semantic types are available in the current '
                    'deployment.')
 @click.option('--input-path', required=True,
@@ -262,7 +262,7 @@ def show_formats(queries, importable, exportable, strict, tsv):
 @click.option('--input-format', required=False,
               help='The format of the data to be imported. If not provided, '
                    'data must be in the format expected by the semantic type '
-                   'provided via --type. Use `qiime tools list-formats '
+                   'provided via --type. Use `rachis tools list-formats '
                    '--importable` to see which formats of input data are '
                    'importable.')
 @click.option('--validate-level', default='max',
@@ -287,9 +287,9 @@ def import_data(type, input_path, output_path, input_format, validate_level):
     click.echo(CONFIG.cfg_style('success', success))
 
 
-@tools.command(short_help='Take a peek at a QIIME 2 Artifact or '
+@tools.command(short_help='Take a peek at a rachis Artifact or '
                           'Visualization.',
-               help="Display basic information about a QIIME 2 Artifact or "
+               help="Display basic information about a rachis Artifact or "
                     "Visualization, including its UUID and type.",
                cls=ToolCommand)
 @click.argument('paths', nargs=-1, required=True,
@@ -543,8 +543,8 @@ def _merge_metadata(paths):
     return metadata
 
 
-@tools.command(short_help='Make a QIIME 2 Report.',
-               help='Make a QIIME 2 report consisting of multiple '
+@tools.command(short_help='Make a rachis Report.',
+               help='Make a rachis report consisting of multiple '
                     'visualizations. Visualizations must have unique '
                     'filenames.',
                cls=ToolCommand)
@@ -575,10 +575,10 @@ def make_report(visualization_paths, report_path):
     click.echo(CONFIG.cfg_style('success', f'Report saved to {result}'))
 
 
-@tools.command(short_help='View a QIIME 2 Result.',
-               help="Displays a QIIME 2 Result until the command exits. To "
-                    "open a QIIME 2 Visualization so it can be used after the "
-                    "command exits, use 'qiime tools extract'.",
+@tools.command(short_help='View a rachis Result.',
+               help="Displays a rachis Result until the command exits. To "
+                    "open a rachis Visualization so it can be used after the "
+                    "command exits, use 'rachis tools extract'.",
                cls=ToolCommand)
 @click.argument('result-path', metavar='RESULT',
                 type=click.Path(file_okay=True, dir_okay=False, readable=True))
@@ -598,7 +598,7 @@ def view(result_path, port, verbose):
             'Result viewing is currently not supported in headless '
             'environments. You can view Results at https://view.qiime2.org, '
             'or move the Result to an environment with a display and view it '
-            'with `qiime tools view`.')
+            'with `rachis tools view`.')
 
     import signal
     import random
@@ -679,7 +679,7 @@ def view(result_path, port, verbose):
                 self.wfile.write(file.read())
 
     # Get the path to the packaged vendored view
-    # TODO: This won't work if we start packaging QIIME 2 as a wheel, we will
+    # TODO: This won't work if we start packaging rachis as a wheel, we will
     # have to reimplement this used importlib.resources and it may be mildly
     # annoying to make things work properly. It's hard to tell right now since
     # we do not use a wheel.
@@ -757,13 +757,13 @@ def view(result_path, port, verbose):
             break
 
 
-@tools.command(short_help="Extract a QIIME 2 Artifact or Visualization "
+@tools.command(short_help="Extract a rachis Artifact or Visualization "
                           "archive.",
-               help="Extract all contents of a QIIME 2 Artifact or "
+               help="Extract all contents of a rachis Artifact or "
                     "Visualization's archive, including provenance, metadata, "
-                    "and actual data. Use 'qiime tools export' to export only "
-                    "the data stored in an Artifact or Visualization, with "
-                    "the choice of exporting to different formats.",
+                    "and actual data. Use 'rachis tools export' to export "
+                    "only the data stored in an Artifact or Visualization, "
+                    "with the choice of exporting to different formats.",
                cls=ToolCommand)
 @click.option('--input-path', required=True, metavar=_COMBO_METAVAR,
               type=click.Path(exists=True, file_okay=True, dir_okay=False,
@@ -784,15 +784,15 @@ def extract(input_path, output_path):
         extracted_dir = qiime2.sdk.Result.extract(input_path, output_path)
     except (zipfile.BadZipFile, ValueError):
         raise click.BadParameter(
-            '%s is not a valid QIIME 2 Result. Only QIIME 2 Artifacts and '
+            '%s is not a valid rachis Result. Only rachis Artifacts and '
             'Visualizations can be extracted.' % input_path)
     else:
         success = 'Extracted %s to directory %s' % (input_path, extracted_dir)
         click.echo(CONFIG.cfg_style('success', success))
 
 
-@tools.command(short_help='Validate data in a QIIME 2 Artifact.',
-               help='Validate data in a QIIME 2 Artifact. QIIME 2 '
+@tools.command(short_help='Validate data in a rachis Artifact.',
+               help='Validate data in a rachis Artifact. rachis '
                     'automatically performs some basic validation when '
                     'managing your data; use this command to perform explicit '
                     'and/or more thorough validation of your data (e.g. when '
@@ -815,7 +815,7 @@ def validate(path, level):
     try:
         result = qiime2.sdk.Result.load(path)
     except Exception as e:
-        header = 'There was a problem loading %s as a QIIME 2 Result:' % path
+        header = 'There was a problem loading %s as a rachis Result:' % path
         q2cli.util.exit_with_error(e, header=header)
 
     try:
@@ -833,8 +833,8 @@ def validate(path, level):
                                     f'valid at level={level}.'))
 
 
-@tools.command(short_help='Print citations for a QIIME 2 result.',
-               help='Print citations as a BibTex file (.bib) for a QIIME 2'
+@tools.command(short_help='Print citations for a rachis result.',
+               help='Print citations as a BibTex file (.bib) for a rachis'
                     ' result.',
                cls=ToolCommand)
 @click.argument('path', type=click.Path(exists=True, file_okay=True,
@@ -849,7 +849,7 @@ def citations(path):
     try:
         result = qiime2.sdk.Result.load(path)
     except Exception as e:
-        header = 'There was a problem loading %s as a QIIME 2 result:' % path
+        header = 'There was a problem loading %s as a rachis result:' % path
         q2cli.util.exit_with_error(e, header=header)
 
     if result.citations:
@@ -904,7 +904,7 @@ def cache_remove(cache, key):
     try:
         _cache = Cache(cache)
     except Exception as e:
-        header = f"The path '{cache}' is not a valid QIIME 2 cache."
+        header = f"The path '{cache}' is not a valid rachis cache."
         q2cli.util.exit_with_error(e, header=header, traceback=None)
 
     for _key in key:
@@ -998,7 +998,7 @@ def cache_store(cache, artifact_path, key):
                cls=ToolCommand)
 @click.option('--type', required=True,
               help='The semantic type of the artifact that will be created '
-                   'upon importing. Use `qiime tools list-types` to see what '
+                   'upon importing. Use `rachis tools list-types` to see what '
                    'importable semantic types are available in the current '
                    'deployment.')
 @click.option('--input-path', required=True,
@@ -1015,7 +1015,7 @@ def cache_store(cache, artifact_path, key):
 @click.option('--input-format', required=False,
               help='The format of the data to be imported. If not provided, '
                    'data must be in the format expected by the semantic type '
-                   'provided via --type. Use `qiime tools list-formats '
+                   'provided via --type. Use `rachis tools list-formats '
                    '--importable` to see which formats of input data are '
                    'importable.')
 @click.option('--validate-level', required=False, default='max',
@@ -1050,7 +1050,7 @@ def cache_import(type, input_path, cache, key, input_format, validate_level):
 
 
 @tools.command(name='cache-export',
-               short_help='Export data from a QIIME 2 Artifact '
+               short_help='Export data from a rachis Artifact '
                'or a Visualization in a given cache under a given key.',
                help='Exporting extracts (and optionally transforms) data '
                'stored inside an Artifact or Visualization. Note that '
@@ -1181,7 +1181,7 @@ def cache_status(cache):
 
 
 replay_in_fp_help = (
-    'filepath to a QIIME 2 Archive (.qza or .qzv) or directory of Archives'
+    'filepath to a rachis Archive (.qza or .qzv) or directory of Archives'
 )
 replay_recurse_help = (
     'if in-fp is a directory, will also search sub-directories when finding '
@@ -1270,7 +1270,7 @@ def provenance_replay(
     metadata_out_dir: str = ''
 ):
     """
-    Replay provenance from a QIIME 2 Artifact filepath to a written executable
+    Replay provenance from a rachis Artifact filepath to a written executable
     """
     from qiime2.core.archive.provenance_lib.replay import replay_provenance
     from qiime2.sdk.util import get_available_usage_drivers
@@ -1343,7 +1343,7 @@ def citations_replay(
     verbose: bool = True
 ):
     """
-    Reports all citations from a QIIME 2 Artifact or directory of Artifacts,
+    Reports all citations from a rachis Artifact or directory of Artifacts,
     with the goal of improving and simplifying attribution of/in published
     work.
 
@@ -1371,7 +1371,7 @@ def citations_replay(
 
 @tools.command(name='replay-supplement', cls=ToolCommand)
 @click.option('--in-fp', required=True,
-              help='filepath to a QIIME 2 Archive or directory of Archives')
+              help='filepath to a rachis Archive or directory of Archives')
 @click.option('--recurse/--no-recurse',
               default=False,
               show_default=True,
@@ -1428,7 +1428,7 @@ def supplement_replay(
 ):
     """
     Produces a zipfile package of useful documentation supporting in silico
-    reproducibility of some QIIME 2 Result(s) from a QIIME 2 Artifact or
+    reproducibility of some rachis Result(s) from a rachis Artifact or
     directory of Artifacts.
 
     Package includes:
@@ -1471,9 +1471,9 @@ def supplement_replay(
 
 @tools.command(
     name='annotation-create',
-    short_help='Add a new Annotation to a QIIME 2 Result.',
+    short_help='Add a new Annotation to a rachis Result.',
     help='Attach an Annotation to an existing Artifact or Visualization.'
-         ' Supported for QIIME 2 archives of version 7.0+.',
+         ' Supported for rachis archives of version 7.0+.',
     cls=ToolCommand
 )
 @click.option(
@@ -1579,7 +1579,7 @@ def annotation_create(input_path, annotation_type, name,
 
 @tools.command(
     name='annotation-remove',
-    short_help='Remove an Annotation from a QIIME 2 Result.',
+    short_help='Remove an Annotation from a rachis Result.',
     help='Remove an existing Annotation (by name) from'
          ' an Artifact or Visualization.',
     cls=ToolCommand
@@ -1626,7 +1626,7 @@ def annotation_remove(input_path, name, output_path):
 
 @tools.command(
     name='annotation-fetch',
-    short_help='Fetch an Annotation from a QIIME 2 Result.',
+    short_help='Fetch an Annotation from a rachis Result.',
     help='Fetch an existing Annotation (by name) from'
          ' an Artifact or Visualization.',
     cls=ToolCommand
@@ -1685,7 +1685,7 @@ def annotation_fetch(input_path, name, verbose):
 
 @tools.command(
     name='annotation-list',
-    short_help='List Annotations on a QIIME 2 Result.',
+    short_help='List Annotations on a rachis Result.',
     help='List all Annotations that are attached to'
          ' an Artifact or Visualization.',
     cls=ToolCommand
@@ -1730,12 +1730,12 @@ def annotation_list(input_path):
 
 @tools.command(
     name='signature-verify',
-    short_help='Verify a Signature Annotation on a QIIME 2 Result.',
+    short_help='Verify a Signature Annotation on a rachis Result.',
     help='Verify the Signature fingerprint matches an existing key pair on '
          'the local GPG keyring, the checksum digest matches a newly '
          'calculated sha512sum of the root checksums file, and the '
          'Signature-level checksums match with the expected sha512sum of '
-         'each file on a QIIME 2 Result.',
+         'each file on a rachis Result.',
     cls=ToolCommand
 )
 @click.option(

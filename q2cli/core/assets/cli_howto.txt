@@ -13,7 +13,7 @@
 #    If your data is not identical to that in the replayed analysis,
 #    changes may be required. (e.g. sample ids or rarefaction depth)
 # 6. Optional: replace any filenames in this script that begin with 'XX' with
-#    unique file names to ensure they are preserved. QIIME 2 saves all outputs
+#    unique file names to ensure they are preserved. rachis saves all outputs
 #    from all actions in this script to disk regardless of whether those
 #    outputs were in the original collection of replayed results. The filenames
 #    of "un-replayed" artifacts are prefixed with 'XX' so they may be easily

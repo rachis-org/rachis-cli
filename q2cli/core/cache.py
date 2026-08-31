@@ -8,18 +8,19 @@
 
 
 class DeploymentCache:
-    """Cached CLI state for a QIIME deployment.
+    """Cached CLI state for a rachis deployment.
 
-    In this context, a QIIME deployment is the set of installed Python
-    packages, including their exact versions, that register one or more QIIME 2
-    plugins. The exact version of q2cli is also included in the deployment.
+    In this context, a rachis deployment is the set of installed Python
+    packages, including their exact versions, that register one or more rachis
+    plugins. The exact version of rachis-cli is also included in the
+    deployment.
 
     The deployment cache stores the current deployment's package names and
     versions in a requirements.txt file under the cache directory. This file is
     used to determine if the cache is outdated. If the cache is determined to
     be outdated, it will be refreshed based on the current deployment state.
-    Thus, adding, removing, upgrading, or downgrading a plugin package or q2cli
-    itself will trigger a cache refresh.
+    Thus, adding, removing, upgrading, or downgrading a plugin package or
+    rachis-cli itself will trigger a cache refresh.
 
     Two mechanisms are provided to force a cache refresh. Setting the
     environment variable Q2CLIDEV to any value will cause the cache to be
@@ -29,9 +30,10 @@ class DeploymentCache:
     changing their package versions.
 
     Cached CLI state is stored in a state.json file under the cache directory.
-    It is not a public file format and it is not versioned. q2cli is included
-    as part of the QIIME deployment so that the cached state can always be read
-    (or recreated as necessary) by the currently installed version of q2cli.
+    It is not a public file format and it is not versioned. rachis-cli is
+    included as part of the rachis deployment so that the cached state can
+    always be read (or recreated as necessary) by the currently installed
+    version of rachis-cli.
 
     This class is intended to be a singleton because it is responsible for
     managing the on-disk cache. Having more than one instance managing the
@@ -57,6 +59,7 @@ class DeploymentCache:
 
         self._cache_dir = self._get_cache_dir()
 
+        # TODO: update Q2CLIDEV to RACHISCLIDEV
         refresh = 'Q2CLIDEV' in os.environ
         self._state = self._get_cached_state(refresh=refresh)
 
@@ -131,7 +134,7 @@ class DeploymentCache:
     # `_get_cached_state`.
 
     def _get_current_requirements(self):
-        """Includes installed versions of q2cli and QIIME 2 plugins."""
+        """Includes installed versions of q2cli and rachis plugins."""
         import os
         import importlib.metadata
         import q2cli
@@ -188,7 +191,7 @@ class DeploymentCache:
         import q2cli.util
 
         click.secho(
-            "QIIME is caching your current deployment for improved "
+            "rachis is caching your current deployment for improved "
             "performance. This may take a few moments and should only happen "
             "once per deployment.", fg='yellow', err=True)
 

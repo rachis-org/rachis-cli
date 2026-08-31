@@ -35,7 +35,7 @@ def get_templated_tests():
         ('concatenate_ints',
          """\
 # This example demonstrates basic usage.
-qiime dummy-plugin concatenate-ints \\
+rachis dummy-plugin concatenate-ints \\
   --i-ints1 ints-a.qza \\
   --i-ints2 ints-b.qza \\
   --i-ints3 ints-c.qza \\
@@ -43,7 +43,7 @@ qiime dummy-plugin concatenate-ints \\
   --p-int2 2 \\
   --o-concatenated-ints ints-d.qza
 # This example demonstrates chained usage (pt 1).
-qiime dummy-plugin concatenate-ints \\
+rachis dummy-plugin concatenate-ints \\
   --i-ints1 ints-a.qza \\
   --i-ints2 ints-b.qza \\
   --i-ints3 ints-c.qza \\
@@ -51,7 +51,7 @@ qiime dummy-plugin concatenate-ints \\
   --p-int2 2 \\
   --o-concatenated-ints ints-d.qza
 # This example demonstrates chained usage (pt 2).
-qiime dummy-plugin concatenate-ints \\
+rachis dummy-plugin concatenate-ints \\
   --i-ints1 ints-d.qza \\
   --i-ints2 ints-b.qza \\
   --i-ints3 ints-c.qza \\
@@ -64,24 +64,24 @@ qiime dummy-plugin concatenate-ints \\
 # comment 2"""),
         ('identity_with_metadata',
          """\
-qiime dummy-plugin identity-with-metadata \\
+rachis dummy-plugin identity-with-metadata \\
   --i-ints ints.qza \\
   --m-metadata-file md.tsv \\
   --o-out out.qza
-qiime dummy-plugin identity-with-metadata \\
+rachis dummy-plugin identity-with-metadata \\
   --i-ints ints.qza \\
   --m-metadata-file md1.tsv md2.tsv \\
   --o-out out.qza"""),
         ('identity_with_metadata_column',
          """\
-qiime dummy-plugin identity-with-metadata-column \\
+rachis dummy-plugin identity-with-metadata-column \\
   --i-ints ints.qza \\
   --m-metadata-file md.tsv \\
   --m-metadata-column a \\
   --o-out out.qza"""),
         ('typical_pipeline',
          """\
-qiime dummy-plugin typical-pipeline \\
+rachis dummy-plugin typical-pipeline \\
   --i-int-sequence ints.qza \\
   --i-mapping mapper.qza \\
   --p-do-extra-thing \\
@@ -90,7 +90,7 @@ qiime dummy-plugin typical-pipeline \\
   --o-right right.qza \\
   --o-left-viz left-viz.qzv \\
   --o-right-viz right-viz.qzv
-qiime dummy-plugin typical-pipeline \\
+rachis dummy-plugin typical-pipeline \\
   --i-int-sequence ints1.qza \\
   --i-mapping mapper1.qza \\
   --p-do-extra-thing \\
@@ -99,7 +99,7 @@ qiime dummy-plugin typical-pipeline \\
   --o-right right1.qza \\
   --o-left-viz left-viz1.qzv \\
   --o-right-viz right-viz1.qzv
-qiime dummy-plugin typical-pipeline \\
+rachis dummy-plugin typical-pipeline \\
   --i-int-sequence left1.qza \\
   --i-mapping out-map1.qza \\
   --p-no-do-extra-thing \\
@@ -108,29 +108,29 @@ qiime dummy-plugin typical-pipeline \\
   --o-right right2.qza \\
   --o-left-viz left-viz2.qzv \\
   --o-right-viz right-viz2.qzv
-qiime dev assert-result-data right2.qza \\
+rachis dev assert-result-data right2.qza \\
   --zip-data-path ints.txt \\
   --expression 1
-qiime dev assert-result-type right2.qza \\
+rachis dev assert-result-type right2.qza \\
   --qiime-type IntSequence1
-qiime dev assert-result-type out-map1.qza \\
+rachis dev assert-result-type out-map1.qza \\
   --qiime-type Mapping"""),
         ('optional_artifacts_method',
          """\
-qiime dummy-plugin optional-artifacts-method \\
+rachis dummy-plugin optional-artifacts-method \\
   --i-ints ints.qza \\
   --p-num1 1 \\
   --o-output output1.qza
-qiime dummy-plugin optional-artifacts-method \\
+rachis dummy-plugin optional-artifacts-method \\
   --i-ints ints.qza \\
   --p-num1 1 \\
   --p-num2 2 \\
   --o-output output2.qza
-qiime dummy-plugin optional-artifacts-method \\
+rachis dummy-plugin optional-artifacts-method \\
   --i-ints ints.qza \\
   --p-num1 1 \\
   --o-output output3.qza
-qiime dummy-plugin optional-artifacts-method \\
+rachis dummy-plugin optional-artifacts-method \\
   --i-ints ints.qza \\
   --i-optional1 output3.qza \\
   --p-num1 3 \\
@@ -138,24 +138,24 @@ qiime dummy-plugin optional-artifacts-method \\
   --o-output output4.qza"""),
         ('variadic_input_method',
          """\
-qiime dummy-plugin variadic-input-method \\
+rachis dummy-plugin variadic-input-method \\
   --i-ints ints-a.qza ints-b.qza \\
   --i-int-set single-int1.qza single-int2.qza \\
   --p-nums 7 8 9 \\
   --o-output out.qza"""),
         ('list_of_ints',
          """\
-qiime dummy-plugin list-of-ints \\
+rachis dummy-plugin list-of-ints \\
   --i-ints ints/ \\
   --o-output out/"""),
         ('dict_of_ints',
          """\
-qiime dummy-plugin dict-of-ints \\
+rachis dummy-plugin dict-of-ints \\
   --i-ints ints/ \\
   --o-output out/
-qiime dev assert-result-type out/Foo.qza \\
+rachis dev assert-result-type out/Foo.qza \\
   --qiime-type SingleInt
-qiime dev assert-result-data out/Foo.qza \\
+rachis dev assert-result-data out/Foo.qza \\
   --zip-data-path file1.txt \\
   --expression 1
 ## constructing result collection ##
@@ -165,7 +165,7 @@ keys=( a b )
 names=( ints-a.qza ints-b.qza )
 construct_result_collection
 ##
-qiime dummy-plugin dict-of-ints \\
+rachis dummy-plugin dict-of-ints \\
   --i-ints rc-in/ \\
   --o-output rc-out/
 ## accessing result collection member ##
@@ -173,10 +173,10 @@ ln -s rc-out/b.qza ints-b-from-collection.qza
 ##"""),
         ('viz_collection_pipeline',
          """\
-qiime dummy-plugin viz-collection-pipeline \\
+rachis dummy-plugin viz-collection-pipeline \\
   --i-ints ints.qza \\
   --o-visualizations visualizations/
-qiime dev assert-result-type visualizations/ \\
+rachis dev assert-result-type visualizations/ \\
   --qiime-type Collection[Visualization]""")
         ]
 
@@ -254,7 +254,7 @@ keys=( a b )
 names=( ints-a.qza ints-b.qza )
 construct_result_collection
 ##
-qiime dummy-plugin dict-of-ints \\
+rachis dummy-plugin dict-of-ints \\
   --i-ints rc-in/ \\
   --o-output rc-out/
 ## accessing result collection member ##

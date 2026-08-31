@@ -44,7 +44,7 @@ class TestOption(unittest.TestCase):
     def setUp(self):
         get_dummy_plugin()
         self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         self.parser = configparser.ConfigParser()
         self.path = os.path.join(q2cli.util.get_app_dir(), 'cli-colors.theme')
@@ -73,8 +73,8 @@ class TestOption(unittest.TestCase):
         self._assertRepeatedOptionError(result, '--input-path')
 
     def test_repeated_action_flag(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         out_path = os.path.join(self.tempdir, 'out.qza')
 
         result = self.runner.invoke(
@@ -98,8 +98,8 @@ class TestOption(unittest.TestCase):
         self._assertRepeatedOptionError(result, '--type')
 
     def test_repeated_action_option(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         out_path = os.path.join(self.tempdir, 'out.qza')
 
         result = self.runner.invoke(
@@ -122,8 +122,8 @@ class TestOption(unittest.TestCase):
 
         output_path = os.path.join(self.tempdir, 'out.qza')
 
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
 
         result = self.runner.invoke(
             command, ['identity-with-metadata', '--i-ints', input_path,
@@ -298,7 +298,7 @@ class ReplayCLIUsageTests(unittest.TestCase):
         self.assertIsInstance(usg_var, UsageVariable)
         self.assertEqual(usg_var.var_type, 'artifact')
         self.assertEqual(usg_var.name, unq_var_nm)
-        self.assertRegex(rendered, r'qiime tools import \\')
+        self.assertRegex(rendered, r'rachis tools import \\')
         self.assertRegex(rendered, f"  --type '{import_node.type}'")
         self.assertRegex(rendered, "  --input-path <your data here>")
         self.assertRegex(rendered, f"  --output-path {out_name}")
@@ -341,7 +341,7 @@ class ReplayCLIUsageTests(unittest.TestCase):
         self.assertEqual(usg_var.var_type, 'artifact')
         self.assertEqual(usg_var.name, unique_var_name)
 
-        self.assertIn(f'qiime {plugin} {action}', rendered)
+        self.assertIn(f'rachis {plugin} {action}', rendered)
         self.assertIn('--i-ints1 imported-ints-0.qza', rendered)
         self.assertIn('--i-ints3 imported-ints-1.qza', rendered)
         self.assertIn('--p-int1 7', rendered)

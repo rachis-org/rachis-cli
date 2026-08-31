@@ -222,7 +222,7 @@ def citations_option(get_citation_records):
             citations = qiime2.sdk.Citations(
                 [('key%d' % i, r) for i, r in enumerate(records)])
             with io.StringIO() as fh:
-                fh.write('% use `qiime tools citations` on a QIIME 2 result'
+                fh.write('% use `rachis tools citations` on a rachis result'
                          ' for complete list\n\n')
                 citations.save(fh)
                 click.echo(fh.getvalue(), nl=False)
@@ -327,18 +327,18 @@ def _load_metadata_artifact(fp):
             default_tb = None
             if isinstance(artifact, qiime2.Visualization):
                 raise Exception(
-                    'Visualizations cannot be viewed as QIIME 2 metadata.')
+                    'Visualizations cannot be viewed as rachis metadata.')
             if not artifact.has_metadata():
                 raise Exception(
                     f"Artifacts with type {artifact.type!r} cannot be viewed"
-                    " as QIIME 2 metadata.")
+                    " as rachis metadata.")
 
             default_tb = 'stderr'
             return artifact.view(qiime2.Metadata), None
 
         except Exception as e:
             header = ("There was an issue with viewing the artifact "
-                      f"{fp!r} as QIIME 2 Metadata:")
+                      f"{fp!r} as rachis Metadata:")
             tb = 'stderr' if '--verbose' in sys.argv else default_tb
             exit_with_error(e, header=header, traceback=tb)
 
@@ -348,7 +348,7 @@ def _load_metadata_artifact(fp):
 
 def _load_input(fp, view=False):
     # Just initialize the plugin manager. This is slow and not necessary if we
-    # called this from qiime tools view.
+    # called this from rachis tools view.
     import os
 
     key = None
@@ -481,7 +481,7 @@ def _load_input_file(fp):
     except Exception as error:
         if isinstance(error, SyntaxError):
             raise error
-        # ideally ValueError: X is not a QIIME archive.
+        # ideally ValueError: X is not a rachis archive.
         # but sometimes SyntaxError or worse
         return None, error
 

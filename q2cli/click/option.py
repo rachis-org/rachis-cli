@@ -242,7 +242,7 @@ class GeneratedOption(click.Option):
                         return value[0].merge(*value[1:])
                     except Exception as e:
                         header = ("There was an issue with merging "
-                                  "QIIME 2 Metadata:")
+                                  "rachis Metadata:")
                         tb = 'stderr' if '--verbose' in sys.argv else None
                         q2cli.util.exit_with_error(
                             e, header=header, traceback=tb)

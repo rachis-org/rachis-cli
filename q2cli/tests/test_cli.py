@@ -51,7 +51,7 @@ max_threads = 1"""
 # at the end of a bunch of lines for no apparent reason are preserved here
 CONFIG_LEVEL_3 = "{'parsl': Config("
 
-EXPECTED_CITATIONS = """% use `qiime tools citations` on a QIIME 2 result for complete list
+EXPECTED_CITATIONS = """% use `rachis tools citations` on a rachis result for complete list
 
 @article{key0,
  author = {Unger, Donald L},
@@ -127,7 +127,7 @@ class CliTests(unittest.TestCase):
     def setUp(self):
         get_dummy_plugin()
         self.runner = CliRunner()
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
         self.artifact1_path = os.path.join(self.tempdir, 'a1.qza')
         self.mapping_path = os.path.join(self.tempdir, 'mapping.qza')
 
@@ -205,8 +205,8 @@ class CliTests(unittest.TestCase):
 
     def test_list_commands(self):
         # top level commands, including a plugin, are present
-        qiime_cli = RootCommand()
-        commands = qiime_cli.list_commands(ctx=None)
+        rachis_cli = RootCommand()
+        commands = rachis_cli.list_commands(ctx=None)
         self.assertIn('info', commands)
         self.assertIn('tools', commands)
         self.assertIn('dummy-plugin', commands)
@@ -214,8 +214,8 @@ class CliTests(unittest.TestCase):
 
     def test_plugin_list_commands(self):
         # plugin commands are present including a method and visualizer
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         commands = command.list_commands(ctx=None)
         self.assertIn('split-ints', commands)
         self.assertIn('mapping-viz', commands)
@@ -228,8 +228,8 @@ class CliTests(unittest.TestCase):
     def test_plugin_list_hidden_commands(self):
         # plugin commands are present including a method and visualizer and
         # hidden method
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         commands = self.runner.invoke(command,
                                       ['--show-hidden-actions']).output
         self.assertIn('split-ints', commands)
@@ -242,8 +242,8 @@ class CliTests(unittest.TestCase):
         self.assertNotIn('-underscore-method', commands)
 
     def test_action_parameter_types(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         results = self.runner.invoke(command, ['typical-pipeline', '--help'])
         help_text = results.output
 
@@ -302,8 +302,8 @@ class CliTests(unittest.TestCase):
 
     def test_execute_hidden_action(self):
         int_path = os.path.join(self.tempdir, 'int.qza')
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         result = self.runner.invoke(
                 command, ['_underscore-method', '--o-int', int_path,
                           '--verbose'])
@@ -341,8 +341,8 @@ class CliTests(unittest.TestCase):
         self.assertIn('appears to be valid at level=max', result.output)
 
     def test_split_ints(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
 
         # build output file names
         left_path = os.path.join(self.tempdir, 'left.qza')
@@ -368,8 +368,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(right.view(list), [42, 43])
 
     def test_variadic_inputs(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         output_path = os.path.join(self.tempdir, 'output.qza')
 
         ints1 = Artifact.import_data('IntSequence1', [1, 2, 3]).save(
@@ -395,8 +395,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(output.view(list), list(range(1, 14)))
 
     def test_with_parameters_only(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         output_path = os.path.join(self.tempdir, 'output.qza')
 
         result = self.runner.invoke(
@@ -410,8 +410,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(artifact.view(dict), {'Peanut': '42'})
 
     def test_without_inputs_or_parameters(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         output_path = os.path.join(self.tempdir, 'output.qza')
 
         result = self.runner.invoke(
@@ -424,8 +424,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(artifact.view(dict), {'foo': '42'})
 
     def test_qza_extension(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
 
         # build output parameter arguments and expected output file names
         left_path = os.path.join(self.tempdir, 'left')
@@ -449,8 +449,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(right.view(list), [42, 43])
 
     def test_qzv_extension(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         # build output parameter arguments and expected output file names
         viz_path = os.path.join(self.tempdir, 'viz')
         expected_viz_path = os.path.join(self.tempdir, 'viz.qzv')
@@ -468,8 +468,8 @@ class CliTests(unittest.TestCase):
                                                  'tsv': 'data/index.tsv'})
 
     def test_verbose_shows_stacktrace(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         output = os.path.join(self.tempdir, 'never-happens.qza')
 
         result = self.runner.invoke(
@@ -501,8 +501,8 @@ class CliTests(unittest.TestCase):
                 obj._convert_input(self.artifact1_path, None, None)
 
     def test_syntax_error_in_env(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
 
         viz_path = os.path.join(self.tempdir, 'viz')
 
@@ -517,8 +517,8 @@ class CliTests(unittest.TestCase):
         self.assertIn(self.artifact1_path, result.output)
 
     def test_deprecated_help_text(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
 
         result = self.runner.invoke(command, ['deprecated-method', '--help'])
 
@@ -527,8 +527,8 @@ class CliTests(unittest.TestCase):
         self.assertIn('deprecated', result.output)
 
     def test_run_deprecated_gets_warning_msg(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         output_path = os.path.join(self.tempdir, 'output.qza')
 
         result = self.runner.invoke(
@@ -546,8 +546,8 @@ class CliTests(unittest.TestCase):
         self.assertIn('deprecated', result.output)
 
     def test_get_citations(self):
-        qiime_cli = RootCommand()
-        command = qiime_cli.get_command(ctx=None, name='dummy-plugin')
+        rachis_cli = RootCommand()
+        command = rachis_cli.get_command(ctx=None, name='dummy-plugin')
         result = self.runner.invoke(command, ['split-ints', '--citations'])
 
         self.assertEqual(result.exit_code, 0)
@@ -561,7 +561,8 @@ class CliTests(unittest.TestCase):
         '''
         with tempfile.TemporaryDirectory() as tempdir:
             base_command = [
-                'qiime', 'dummy-plugin', 'raises-rachis-warning', '--o-output',
+                'rachis', 'dummy-plugin', 'raises-rachis-warning',
+                '--o-output',
                 Path(tempdir) / 'output.qza'
             ]
 
@@ -591,7 +592,7 @@ class TestMigrated(unittest.TestCase):
         self.runner = CliRunner()
         self.plugin_command = \
             RootCommand().get_command(ctx=None, name='dummy-plugin')
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
         self.output_path = os.path.join(self.tempdir, 'output.qza')
 
     def tearDown(self):
@@ -770,7 +771,7 @@ class TestOptionalArtifactSupport(unittest.TestCase):
         self.runner = CliRunner()
         self.plugin_command = RootCommand().get_command(
             ctx=None, name='dummy-plugin')
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         self.ints1 = os.path.join(self.tempdir, 'ints1.qza')
         Artifact.import_data(
@@ -836,7 +837,7 @@ class MetadataTestsBase(unittest.TestCase):
         self.runner = CliRunner()
         self.plugin_command = RootCommand().get_command(
             ctx=None, name='dummy-plugin')
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         self.input_artifact = os.path.join(self.tempdir, 'in.qza')
         Artifact.import_data(
@@ -1143,7 +1144,7 @@ class TestCollectionSupport(unittest.TestCase):
         self.runner = CliRunner()
         self.plugin_command = RootCommand().get_command(
             ctx=None, name='dummy-plugin')
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
 
         self.art1_path = os.path.join(self.tempdir, 'art1.qza')
         self.art2_path = os.path.join(self.tempdir, 'art2.qza')

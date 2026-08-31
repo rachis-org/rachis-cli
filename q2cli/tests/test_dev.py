@@ -32,10 +32,10 @@ class TestDev(unittest.TestCase):
         get_dummy_plugin()
         self.parser = configparser.ConfigParser()
         self.runner = CliRunner(mix_stderr=False)
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
         self.generated_config = os.path.join(self.tempdir, 'generated-theme')
 
-        self.tempdir = tempfile.mkdtemp(prefix='qiime2-q2cli-test-temp-')
+        self.tempdir = tempfile.mkdtemp(prefix='rachis-cli-test-temp-')
         self.artifact1_path = os.path.join(self.tempdir, 'a1.qza')
         self.mapping_path = os.path.join(self.tempdir, 'mapping.qza')
 
@@ -123,7 +123,7 @@ class TestDev(unittest.TestCase):
         self.assertRegex(result.stderr,
                          r'Path\s*\'turkey_sandwhere\.qza\'\s*does not exist')
 
-    def test_assert_result_type_invalid_qiime_type(self):
+    def test_assert_result_type_invalid_rachis_type(self):
         result = self.runner.invoke(dev,
                                     ['assert-result-type',
                                      self.mapping_path,

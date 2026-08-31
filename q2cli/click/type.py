@@ -135,7 +135,7 @@ class QIIME2Type(click.ParamType):
                         ' %r, did you mean that?)'
                         % os.path.basename(maybe))
 
-            self.fail('%r is a QIIME 2 visualization (.qzv), not an'
+            self.fail('%r is a rachis visualization (.qzv), not an'
                       ' Artifact (.qza)%s' % (value, hint), param, ctx)
 
         style = qiime2.sdk.util.interrogate_collection_type(self.type_expr)

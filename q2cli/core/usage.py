@@ -93,7 +93,7 @@ class CLIUsageVariable(usage.UsageVariable):
 
         cli_name = '%s%s' % (self.name, self.ext)
 
-        # don't disturb file names, this will break importing where QIIME 2
+        # don't disturb file names, this will break importing where rachis
         # relies on specific filenames being present in a dir
         if self.var_type not in ('format', 'column'):
             cli_name = self.to_cli_name(cli_name)
@@ -113,7 +113,7 @@ class CLIUsageVariable(usage.UsageVariable):
             input_path = self._key_helper(input_path, key)
 
         lines = [
-            'qiime dev assert-result-data %s \\' % (input_path,),
+            'rachis dev assert-result-data %s \\' % (input_path,),
             INDENT + '--zip-data-path %s \\' % (path,),
             INDENT + '--expression %s' % (expr,),
         ]
@@ -130,8 +130,9 @@ class CLIUsageVariable(usage.UsageVariable):
         if key:
             input_path = self._key_helper(input_path, key)
 
+        # TODO: update qiime-type to rachis-type ?
         lines = [
-            'qiime dev assert-result-type %s \\' % (input_path,),
+            'rachis dev assert-result-type %s \\' % (input_path,),
             INDENT + '--qiime-type %s' % (str(semantic_type),),
         ]
 
@@ -231,7 +232,7 @@ class CLIUsage(usage.Usage):
         out_fp = imported_var.to_interface_name()
 
         lines = [
-            'qiime tools import \\',
+            'rachis tools import \\',
             self.INDENT + '--type %r \\' % (semantic_type,)
         ]
 
@@ -271,7 +272,7 @@ class CLIUsage(usage.Usage):
 
     def peek(self, variable):
         var_name = variable.to_interface_name()
-        self.recorder.append('qiime tools peek %s' % var_name)
+        self.recorder.append('rachis tools peek %s' % var_name)
 
     def merge_metadata(self, name, *variables):
         var = super().merge_metadata(name, *variables)
@@ -305,7 +306,7 @@ class CLIUsage(usage.Usage):
 
         plugin_name = util.to_cli_name(action.plugin_id)
         action_name = util.to_cli_name(action.action_id)
-        self.recorder.append('qiime %s %s \\' % (plugin_name, action_name))
+        self.recorder.append('rachis %s %s \\' % (plugin_name, action_name))
 
         action_f = action.get_action()
         action_state = get_action_state(action_f)
@@ -430,7 +431,7 @@ class ReplayCLIUsageVariable(CLIUsageVariable):
 
         cli_name = '%s%s' % (self.name, self.ext)
 
-        # don't disturb file names, this will break importing where QIIME 2
+        # don't disturb file names, this will break importing where rachis
         # relies on specific filenames being present in a dir
         if self.var_type not in ('format', 'column', 'metadata'):
             cli_name = self.to_cli_name(cli_name)
@@ -504,7 +505,7 @@ class ReplayCLIUsage(CLIUsage):
         else:  # no matching param name
             line = self.INDENT + (
                 '# FIXME: The following parameter name was not found in '
-                'your current\n  # QIIME 2 environment. This may occur '
+                'your current\n  # rachis environment. This may occur '
                 'when the plugin version you have\n  # installed does not '
                 'match the version used in the original analysis.\n  # '
                 'Please see the docs and correct the parameter name '
@@ -579,7 +580,7 @@ class ReplayCLIUsage(CLIUsage):
         out_fp = imported_var.to_interface_name()
 
         lines = [
-            'qiime tools import \\',
+            'rachis tools import \\',
             self.INDENT + '--type %r \\' % (semantic_type,)
         ]
 
@@ -680,7 +681,7 @@ class ReplayCLIUsage(CLIUsage):
         inputs: UsageInputs,
         outputs: UsageOutputs
     ):
-        self.recorder.append('qiime %s %s \\' % (plugin_name, action_name))
+        self.recorder.append('rachis %s %s \\' % (plugin_name, action_name))
 
         variables = Usage.action(self, action, inputs, outputs)
         vars_dict = variables._asdict()
@@ -736,10 +737,10 @@ class ReplayCLIUsage(CLIUsage):
 
         self.recorder.append(
             '# FIXME: The following action was not found in your current '
-            'QIIME 2\n# environment. Please ensure the action and its '
+            'rachis\n# environment. Please ensure the action and its '
             'parameters are correct before\n# running.'
         )
-        self.recorder.append('qiime %s %s \\' % (plugin_name, action_name))
+        self.recorder.append('rachis %s %s \\' % (plugin_name, action_name))
 
         for param_name, value in ins.items():
             self._append_unknown_param(param_name, value)

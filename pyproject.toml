@@ -10,10 +10,11 @@ dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://qiime2.org"
-Repository = "https://github.com/qiime2/q2cli"
+Repository = "https://github.com/rachis-org/rachis-cli"
 
 [project.scripts]
 "qiime" = "q2cli.__main__:qiime"
+"rachis" = "q2cli.__main__:qiime"
 
 [project.entry-points.'qiime2.usage_drivers']
 "cli" = "q2cli.core.usage:ReplayCLIUsage"
@@ -45,7 +46,7 @@ file = "q2cli/_version.py"
 [tool.setuptools]
 include-package-data = true
 script-files = [
-    "bin/tab-qiime"
+    "bin/tab-rachis"
 ]
 
 [tool.setuptools.packages.find]
