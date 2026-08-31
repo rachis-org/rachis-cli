@@ -22,7 +22,7 @@ def _echo_version():
     click.echo('Parsl version: %s' % _get_parsl_ver())
     click.echo('rachis release: %s' % qiime2.__release__)
     click.echo('rachis version: %s' % qiime2.__version__)
-    click.echo('q2cli version: %s' % q2cli.__version__)
+    click.echo('rachis-cli version: %s' % q2cli.__version__)
 
 
 def _get_parsl_ver():

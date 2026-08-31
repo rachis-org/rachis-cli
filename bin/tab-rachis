@@ -41,7 +41,7 @@ _rachis_completion()
 
 # Enable default readline and bash completion behavior when `_rachis_completion`
 # doesn't have a reply.
-complete -F _rachis_completion -o default -o bashdefault ${usr_cmd}
+complete -F _rachis_completion -o default -o bashdefault rachis qiime
 
 # Execute a `rachis` command (any command will do) so that tab-completion will
 # work out-of-the-box (e.g. with a fresh installation of rachis-cli). Running a
@@ -51,4 +51,4 @@ complete -F _rachis_completion -o default -o bashdefault ${usr_cmd}
 # Ignore stdout to avoid displaying help text to users enabling tab-completion.
 # stderr displays the note about cache refreshing, as that can take a few
 # moments to complete.
-${usr_cmd} &> /dev/null
+rachis &> /dev/null
