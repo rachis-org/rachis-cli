@@ -130,7 +130,6 @@ class CLIUsageVariable(usage.UsageVariable):
         if key:
             input_path = self._key_helper(input_path, key)
 
-        # TODO: update qiime-type to rachis-type ?
         lines = [
             'rachis dev assert-result-type %s \\' % (input_path,),
             INDENT + '--qiime-type %s' % (str(semantic_type),),
