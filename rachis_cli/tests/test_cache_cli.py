@@ -213,7 +213,124 @@ class TestCacheCli(unittest.TestCase):
         )
 
         self.assertEqual(result.exit_code, 1)
-        self.assertRegex(result.output, r"cache")
+        # Each attempted approach should start on its own line
+        self.assertIn("\n  1. Treating 'not_a_cache:art1'", result.output)
+        self.assertIn("\n  2. Treating 'not_a_cache'", result.output)
+        self.assertIn("\n  3. Treating 'not_a_cache'", result.output)
+        self.assertNotIn('4. Treating', result.output)
+
+        # Collapse whitespace so we aren't sensitive to where lines wrap
+        output = ' '.join(result.output.split())
+        self.assertIn(
+            "Cannot load 'not_a_cache:art1' as an Artifact. The following"
+            " approaches were attempted:"
+            " 1. Treating 'not_a_cache:art1' as a path to an Artifact."
+            " 2. Treating 'not_a_cache' as a collection key and 'art1' as a"
+            " path to an Artifact."
+            " 3. Treating 'not_a_cache' as a path to a cache and 'art1' as an"
+            " Artifact key in the cache.", output)
+
+    def test_invalid_keyed_cache_path_input(self):
+        art1_path = 'foo:not_a_cache:art1'
+
+        left_path = str(self.cache.path) + ':left'
+        right_path = str(self.cache.path) + ':right'
+
+        result = self._run_command(
+            'split-ints', '--i-ints', art1_path, '--o-left', left_path,
+            '--o-right', right_path, '--verbose'
+        )
+
+        self.assertEqual(result.exit_code, 1)
+        # Each attempted approach should start on its own line
+        self.assertIn("\n  1. Treating 'foo:not_a_cache:art1'", result.output)
+        self.assertIn("\n  2. Treating 'foo'", result.output)
+        self.assertIn("\n  3. Treating 'foo:not_a_cache'", result.output)
+        self.assertIn("\n  4. Treating 'foo'", result.output)
+
+        # Collapse whitespace so we aren't sensitive to where lines wrap
+        output = ' '.join(result.output.split())
+        self.assertIn(
+            "Cannot load 'foo:not_a_cache:art1' as an Artifact. The following"
+            " approaches were attempted:"
+            " 1. Treating 'foo:not_a_cache:art1' as a path to an Artifact."
+            " 2. Treating 'foo' as a collection key and 'not_a_cache:art1' as"
+            " a path to an Artifact."
+            " 3. Treating 'foo:not_a_cache' as a path to a cache and 'art1' as"
+            " an Artifact key in the cache."
+            " 4. Treating 'foo' as a collection key, 'not_a_cache' as a cache"
+            " path, and 'art1' as an Artifact key in the cache.", output)
+
+    def test_invalid_cache_path_input_empty_fields(self):
+        left_path = str(self.cache.path) + ':left'
+        right_path = str(self.cache.path) + ':right'
+
+        # Splitting these on : leaves some empty pieces, and we shouldn't
+        # attempt to load anything using those empty pieces. Includes some
+        # very degenerate test cases
+        for art1_path, expected in [
+            (':not_a_cache:art1',
+             " 1. Treating ':not_a_cache:art1' as a path to an Artifact."
+             " 2. Treating ':not_a_cache' as a path to a cache and 'art1' as"
+             " an Artifact key in the cache."),
+            ('not_a_cache:',
+             " 1. Treating 'not_a_cache:' as a path to an Artifact."),
+            ('foo::art1',
+             " 1. Treating 'foo::art1' as a path to an Artifact."
+             " 2. Treating 'foo' as a collection key and ':art1' as a path"
+             " to an Artifact."
+             " 3. Treating 'foo:' as a path to a cache and 'art1' as an"
+             " Artifact key in the cache."),
+            # Paths that are nothing but colons can only be paths
+            (':',
+             " 1. Treating ':' as a path to an Artifact."),
+            ('::',
+             " 1. Treating '::' as a path to an Artifact."),
+            (':::',
+             " 1. Treating ':::' as a path to an Artifact."),
+            # Colons only at the start and/or end
+            (':foo',
+             " 1. Treating ':foo' as a path to an Artifact."),
+            (':foo:',
+             " 1. Treating ':foo:' as a path to an Artifact."),
+            ('foo::',
+             " 1. Treating 'foo::' as a path to an Artifact."
+             " 2. Treating 'foo' as a collection key and ':' as a path to an"
+             " Artifact."),
+            ('::art1',
+             " 1. Treating '::art1' as a path to an Artifact."
+             " 2. Treating ':' as a path to a cache and 'art1' as an Artifact"
+             " key in the cache."),
+            ('foo:not_a_cache:',
+             " 1. Treating 'foo:not_a_cache:' as a path to an Artifact."
+             " 2. Treating 'foo' as a collection key and 'not_a_cache:' as a"
+             " path to an Artifact."),
+            # Colons in a row in the middle still leave every piece non-empty
+            ('foo:::art1',
+             " 1. Treating 'foo:::art1' as a path to an Artifact."
+             " 2. Treating 'foo' as a collection key and '::art1' as a path"
+             " to an Artifact."
+             " 3. Treating 'foo::' as a path to a cache and 'art1' as an"
+             " Artifact key in the cache."
+             " 4. Treating 'foo' as a collection key, ':' as a cache path,"
+             " and 'art1' as an Artifact key in the cache."),
+        ]:
+            with self.subTest(art1_path=art1_path):
+                result = self._run_command(
+                    'split-ints', '--i-ints', art1_path, '--o-left',
+                    left_path, '--o-right', right_path, '--verbose'
+                )
+
+                self.assertEqual(result.exit_code, 1)
+                self.assertNotIn("''", result.output)
+
+                # Collapse whitespace so we aren't sensitive to where lines
+                # wrap. The error is the last thing printed, so this also
+                # makes sure no other approaches are listed
+                output = ' '.join(result.output.split())
+                self.assertTrue(output.endswith(
+                    f"Cannot load '{art1_path}' as an Artifact. The following"
+                    f" approaches were attempted:{expected}"), output)
 
     def test_invalid_cache_path_output(self):
         self.cache.save(self.art1, 'art1')
@@ -771,6 +888,20 @@ class TestCacheCli(unittest.TestCase):
         self.assertIn("does not contain the key 'art1'",
                       str(result.output))
 
+    def test_nonexistent_input_key_keyed(self):
+        art1_path = 'foo:' + str(self.cache.path) + ':art1'
+        left_path = str(self.cache.path) + ':left'
+
+        result = self._run_command(
+            'split-ints', '--i-ints', art1_path, '--o-left', left_path,
+            '--o-right', self.non_cache_output, '--verbose'
+        )
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertIn("does not contain the key 'art1'",
+                      str(result.output))
+        self.assertNotIn('approaches were attempted', result.output)
+
     def test_output_key_invalid(self):
         self.cache.save(self.art1, 'art1')
         self.cache.save(self.art2, 'art2')
@@ -818,7 +949,14 @@ class TestCacheCli(unittest.TestCase):
             tools, ['inspect-metadata', 'not_a_cache:key'])
 
         self.assertEqual(result.exit_code, 1)
-        self.assertIn('is not a valid cache', result.output)
+        self.assertIn(
+            "Cannot load 'not_a_cache:key' as an Artifact. The following"
+            " approaches were attempted:\n"
+            "  1. Treating 'not_a_cache:key' as a path to an Artifact.\n"
+            "  2. Treating 'not_a_cache' as a collection key and 'key' as a"
+            " path to an Artifact.\n"
+            "  3. Treating 'not_a_cache' as a path to a cache and 'key' as an"
+            " Artifact key in the cache.", result.output)
 
     def test_output_dir_as_cache(self):
         self.cache.save(self.art1, 'art1')

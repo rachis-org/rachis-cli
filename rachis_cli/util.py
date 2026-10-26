@@ -7,10 +7,23 @@
 # ----------------------------------------------------------------------------
 
 import contextlib
+from typing import Callable, NamedTuple, Optional
 
 
 class OutOfDisk(Exception):
     pass
+
+
+class NotACache(ValueError):
+    pass
+
+
+class _LoadAttempt(NamedTuple):
+    """One way of interpreting an input path with colons in it"""
+    collection_key: Optional[str]
+    fp: str
+    loader: Callable
+    description: str
 
 
 def get_app_dir():
@@ -407,30 +420,84 @@ def _load_input(fp, view=False):
     # key. We could also be loading a normal unkeyed artifact with a : in its
     # path
     elif ':' in fp:
-        # First we assume this is just a weird filepath
-        artifact, _ = _load_input_file(fp)
-        # Then we check if it is a key:path
-        if artifact is None:
-            key, new_fp = _get_path_and_collection_key(fp)
-            artifact, _ = _load_input_file(new_fp)
+        # We determine what ways we must attempt to load the input based on the
+        # number of colons in the input before we attempt to load it.
 
-        # If we still have nothing
-        if artifact is None:
-            key = None
-            # We assume this is a cache:key. We keep this error because we
-            # assume if they had a : in their path they were trying to load
-            # something from a cache
-            artifact, error = _load_input_cache(fp)
-            if error:
-                # Then we check if it is a key:cache:key
-                key, new_fp = _get_path_and_collection_key(fp)
-                artifact, _ = _load_input_cache(new_fp)
+        # First we assume this is just a filepath with colons in it.
+        to_attempt = [_LoadAttempt(
+            None, fp, _load_input_file,
+            f"Treating '{fp}' as a path to an Artifact."
+        )]
+
+        # Then we check if it might be a collection_key:path. This requires
+        # one colon that isn't at the start or end of the string. The path may
+        # contain colons, but the collection key cannot.
+        collection_key, path = _get_path_and_collection_key(fp)
+        if collection_key and path:
+            to_attempt.append(_LoadAttempt(
+                collection_key, path, _load_input_file,
+                f"Treating '{collection_key}' as a collection key and"
+                f" '{path}' as a path to an Artifact.")
+            )
+
+        # Then we check if it might be a cache:key. This is subtly different
+        # (see _get_cache_path_and_key vs _get_path_and_collection_key) because
+        # the cache path may contain colons, but the key cannot.
+        cache_path, cache_key = _get_cache_path_and_key(fp)
+        if cache_path and cache_key:
+            to_attempt.append(_LoadAttempt(
+                None, fp, _load_input_cache,
+                f"Treating '{cache_path}' as a path to a cache and"
+                f" '{cache_key}' as an Artifact key in the cache.")
+            )
+
+        # Then we check if it might be a key:cache:key which entails an already
+        # parsed collection key and a path with a colon in it meaning that
+        # path MIGHT be a cache:key not just a path.
+        if collection_key and ':' in path:
+            cache_path, cache_key = _get_cache_path_and_key(path)
+            if cache_path and cache_key:
+                to_attempt.append(_LoadAttempt(
+                    collection_key, path, _load_input_cache,
+                    f"Treating '{collection_key}' as a collection key,"
+                    f" '{cache_path}' as a cache path, and '{cache_key}' as"
+                    " an Artifact key in the cache.")
+                )
+
+        # Then we attempt to load our input in all the ways we have found it
+        # might exist as determined above
+        cache_error = None
+        for attempt in to_attempt:
+            artifact, error = attempt.loader(attempt.fp)
+            # If we ever get an artifact, we take it, and disregard any errors
+            # we may have gotten from previous attempts
+            if artifact is not None:
+                # Record the collection key if we found one to be returned to
+                # the caller. If this is None, the caller can handle that
+                key = attempt.collection_key
+                break
+
+            # If we found a cache but couldn't load from it, we assume they
+            # were trying to load from that cache and keep the error instead
+            # of any other errors. This is the simplest explanation for what
+            # they were trying to do.
+            if attempt.loader is _load_input_cache and cache_error is None \
+                    and not isinstance(error, NotACache):
+                cache_error = error
 
         # If we ended up with an artifact, we disregard our error
         if artifact is not None:
             error = None
+        elif cache_error is not None:
+            error = cache_error
+        else:
+            msg = f"Cannot load '{fp}' as an Artifact. The following" \
+                " approaches were attempted:"
+            for idx, attempt in enumerate(to_attempt, 1):
+                msg += f"\n{idx}. {attempt.description}"
+            error = ValueError(msg)
     # We are just loading a normal artifact on disk without silly colons in the
-    # filepath
+    # filepath, so we can avoid all the nonsense above.
     else:
         artifact, error = _load_input_file(fp)
 
@@ -554,7 +621,7 @@ def try_as_cache_input(fp):
     # We don't want to invent a new cache on disk here because if their input
     # exists their cache must also already exist
     if not os.path.exists(cache_path) or not Cache.is_cache(cache_path):
-        raise ValueError(f"The path {cache_path!r} is not a valid cache.")
+        raise NotACache(f"The path {cache_path!r} is not a valid cache.")
 
     cache = Cache(cache_path)
     return cache.load(key)
