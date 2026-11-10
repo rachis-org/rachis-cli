@@ -75,11 +75,19 @@ class BaseCommandMixin:
             click.echo(CONFIG.cfg_style('problem',
                        problems.center(78, ' ')), err=True)
             for idx, e in enumerate(errors, 1):
-                msg = click.formatting.wrap_text(
-                    e.format_message(),
-                    initial_indent=' (%d/%d%s) ' % (idx, len(errors),
-                                                    '?' if skip_rest else ''),
-                    subsequent_indent='  ')
+                indent = ' (%d/%d%s) ' % (idx, len(errors),
+                                          '?' if skip_rest else '')
+                # Wrap each line separately so newlines in the message are
+                # preserved instead of being treated as regular whitespace.
+                # This is useful for formatting long error messages such as the
+                # one raised when an input path has a : in it and all attempts
+                # to parse the path fail.
+                lines = []
+                for line in e.format_message().splitlines():
+                    lines.append(click.formatting.wrap_text(
+                        line, initial_indent=indent, subsequent_indent='  '))
+                    indent = '  '
+                msg = '\n'.join(lines)
                 click.echo(CONFIG.cfg_style('error', msg), err=True)
             ctx.exit(1)
 
