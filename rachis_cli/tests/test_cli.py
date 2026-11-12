@@ -12,6 +12,7 @@ import errno
 import os.path
 from pathlib import Path
 import shutil
+import psutil
 import subprocess
 import tempfile
 import unittest
@@ -37,18 +38,22 @@ from rachis_cli.util import (
 )
 
 
-CONFIG_LEVEL_2 = """[parsl]
+CONFIG_LEVEL_2 = f"""[parsl]
 strategy = "None"
 
 [[parsl.executors]]
 class = "ThreadPoolExecutor"
-label = "default"
-max_threads = 1
+label = "tpool"
+max_threads = {max(psutil.cpu_count() - 1, 1)}
 
 [[parsl.executors]]
-class = "_TEST_EXECUTOR_"
-label = "test"
-max_threads = 1"""
+class = "HighThroughputExecutor"
+label = "default"
+max_workers_per_node = {max(psutil.cpu_count() - 1, 1)}
+
+[parsl.executors.provider]
+class = "LocalProvider"
+"""
 
 # This is formatted this way to ensure the trailing spaces tomlkit.dumps throws
 # at the end of a bunch of lines for no apparent reason are preserved here
@@ -154,7 +159,7 @@ class CliTests(unittest.TestCase):
         self.assertIn('dummy-plugin', result.output)
         self.assertIn('other-plugin', result.output)
         self.assertIn('Config', result.output)
-        self.assertIn('Config Source: test config dict', result.output)
+        self.assertIn('Config Source: vendored config dict', result.output)
 
     def test_info_level_0(self):
         result = self.runner.invoke(info, '--config-level 0')
@@ -166,7 +171,7 @@ class CliTests(unittest.TestCase):
         self.assertIn('dummy-plugin', result.output)
         self.assertIn('other-plugin', result.output)
         self.assertNotIn('Config', result.output)
-        self.assertNotIn('Config Source: test config dict', result.output)
+        self.assertNotIn('Config Source: vendored config dict', result.output)
 
     def test_info_level_1(self):
         result = self.runner.invoke(info, '--config-level 1')
@@ -178,7 +183,7 @@ class CliTests(unittest.TestCase):
         self.assertIn('dummy-plugin', result.output)
         self.assertIn('other-plugin', result.output)
         self.assertIn('Config', result.output)
-        self.assertIn('Config Source: test config dict', result.output)
+        self.assertIn('Config Source: vendored config dict', result.output)
 
     def test_info_level_2(self):
         result = self.runner.invoke(info, '--config-level 2')
@@ -190,7 +195,7 @@ class CliTests(unittest.TestCase):
         self.assertIn('dummy-plugin', result.output)
         self.assertIn('other-plugin', result.output)
         self.assertIn('Config', result.output)
-        self.assertIn('Config Source: test config dict', result.output)
+        self.assertIn('Config Source: vendored config dict', result.output)
         self.assertIn(CONFIG_LEVEL_2, result.output)
 
     def test_info_level_3(self):
@@ -203,7 +208,7 @@ class CliTests(unittest.TestCase):
         self.assertIn('dummy-plugin', result.output)
         self.assertIn('other-plugin', result.output)
         self.assertIn('Config', result.output)
-        self.assertIn('Config Source: test config dict', result.output)
+        self.assertIn('Config Source: vendored config dict', result.output)
         self.assertIn(CONFIG_LEVEL_3, result.output)
 
     def test_list_commands(self):
